@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "209114385002",
+    "firebase_url": "https://claymodelsell.firebaseio.com",
+    "project_id": "claymodelsell",
+    "storage_bucket": "claymodelsell.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209114385002:android:d4d962a9b1eb9d77",
+        "android_client_info": {
+          "package_name": "com.appdev.jayes.claymodelsell"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "209114385002-tcc43d2ibkctrqke18mj6fld1esg4843.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appdev.jayes.claymodelsell",
+            "certificate_hash": "8d45a65ca6ee13cfafb7710522e0aa27497ec846"
+          }
+        },
+        {
+          "client_id": "209114385002-sfh5eqhlgr7s4f96o0svhfthuvmvo5rc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6m_QWfWuoQp-DpumX1099pMoeJd64uD8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "209114385002-sfh5eqhlgr7s4f96o0svhfthuvmvo5rc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
