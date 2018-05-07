@@ -233,7 +233,7 @@ public class SellActivity extends AppCompatActivity {
         rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-
+//test data
                 try {
                     currentValue[0] = dataSnapshot.getValue(Integer.class);
                 } catch (Exception e) {
