@@ -1,5 +1,6 @@
 package com.appdev.jayes.claymodelsell;
 
+import android.app.ProgressDialog;
 import android.icu.util.Calendar;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,6 +53,8 @@ public class SellActivity extends AppCompatActivity {
     Spinner locationSpinner;
     Spinner modelNameSpinner;
 
+    private ProgressDialog pDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +71,12 @@ public class SellActivity extends AppCompatActivity {
         comments = (EditText) findViewById(R.id.comments);
         advance = (EditText) findViewById(R.id.advance);
         balance = (TextView) findViewById(R.id.balance);
+
+        ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.GONE);
+        pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Please wait...");
+        pDialog.setCancelable(false);
 
         refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
         refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
@@ -189,7 +199,7 @@ public class SellActivity extends AppCompatActivity {
         try {
             d = Double.parseDouble(data);
         } catch (Exception e) {
-            d = 0.00;
+            d = 0.0;
         }
         return d;
     }
@@ -228,27 +238,32 @@ public class SellActivity extends AppCompatActivity {
     }
 
     private void receiptno() {
-        final int[] currentValue = new int[1];
         final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
+        showProgressBar(true);
         rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 //test data
+                showProgressBar(false);
+                int currentValue = 0;
+                String value;
                 try {
-                    currentValue[0] = dataSnapshot.getValue(Integer.class);
+                    value = dataSnapshot.getValue().toString();
                 } catch (Exception e) {
-                    currentValue[0] = 0;
-                    receiptNo.setText(String.format("%04d", 1));
+                    value = null;
                 }
-                receiptNo.setText(String.format("%04d", currentValue[0] + 1));
 
-                System.out.println("This is the new value" + currentValue[0]);
+                if (value == null) {
+                    receiptNo.setText(String.format("%04d", 1));
+                } else {
+                    currentValue = Integer.parseInt(value);
+                    receiptNo.setText(String.format("%04d", currentValue + 1));
+                }
                 if (increse) {
-                    rcptno.setValue(String.format("%04d", currentValue[0] + 1));
-                    receiptNo.setText(String.format("%04d", currentValue[0] + 2));
+                    rcptno.setValue(String.format("%04d", currentValue + 1));
+                    receiptNo.setText(String.format("%04d", currentValue + 2));
                     increse = false;
                 }
-
             }
 
             @Override
@@ -330,6 +345,27 @@ public class SellActivity extends AppCompatActivity {
 
         model() {
         }
+    }
+
+    private void showProgressBar(final boolean visibility) {
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                if (visibility)
+                    showpDialog();
+                else hidepDialog();
+            }
+        });
+    }
+
+    private void showpDialog() {
+        if (!pDialog.isShowing())
+            pDialog.show();
+    }
+
+    private void hidepDialog() {
+        if (pDialog.isShowing())
+            pDialog.dismiss();
     }
 
 }
