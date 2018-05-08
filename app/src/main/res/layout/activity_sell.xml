@@ -86,7 +86,6 @@
             android:ems="10"
             android:hint="Price"
             android:inputType="numberDecimal"
-            android:text="0"
             android:textSize="19sp" />
     </LinearLayout>
 
@@ -111,7 +110,6 @@
             android:ems="10"
             android:hint="Advance"
             android:inputType="textPersonName|numberDecimal"
-            android:text="0"
             android:textSize="19sp" />
     </LinearLayout>
 
@@ -134,7 +132,7 @@
             android:layout_marginLeft="4sp"
             android:layout_weight="1"
             android:ems="10"
-            android:text="0"
+            android:hint="Balance"
             android:textSize="19sp" />
 
     </LinearLayout>
@@ -158,11 +156,11 @@
             android:text="Save" />
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/buttonPrint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Button" />
+            android:text="Print" />
     </LinearLayout>
 
     <ProgressBar

@@ -99,10 +99,11 @@ public class SellActivity extends AppCompatActivity {
         modelNameSpinner.setAdapter(modelAdapter);
 
         receiptno();
-
+        showProgressBar(true);
         refLocation.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                showProgressBar(false);
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     locationList.add(child.getValue().toString());
                 }
@@ -113,9 +114,11 @@ public class SellActivity extends AppCompatActivity {
 
             }
         });
+        showProgressBar(true);
         refModelName.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                showProgressBar(false);
                 for (DataSnapshot dts : dataSnapshot.getChildren()) {
                     model mdl = dts.getValue(model.class);
                     System.out.println(mdl.getModelName());
@@ -133,9 +136,15 @@ public class SellActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String temp = parent.getItemAtPosition(position).toString();
-                String[] data = temp.split("-", 2);
-                if (data.length > 1)
-                    price.setText(data[1]);
+                if (position == 0) {
+                    price.setText(null);
+                    balance.setText(null);
+
+                } else {
+                    String[] data = temp.split("-", 2);
+                    if (data.length > 1)
+                        price.setText(data[1]);
+                }
             }
 
             @Override
@@ -143,18 +152,6 @@ public class SellActivity extends AppCompatActivity {
 
             }
         });
-        locationSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
         price.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -205,24 +202,54 @@ public class SellActivity extends AppCompatActivity {
     }
 
     public void buttonSave(View view) {
-        //Collect all data
 
-        //save to database
-        DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
-                "users/" +
-                        user.getUid() +
-                        "/sales/" +
-                        getTime("y") + "/" +
-                        getTime("m") + "/");
-        refSale.push().setValue(getSalesTransaction());
-        //on successfull save print 2 copies
-        increse = true;
-        receiptno();
+        //Validate and collect all data
+        if (name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)
+            Toast.makeText(SellActivity.this, "Please enter all details", Toast.LENGTH_SHORT).show();
+        else {
+
+            //save to database
+            DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
+                    "users/" +
+                            user.getUid() +
+                            "/sales/" +
+                            getTime("y") + "/" +
+                            getTime("m") + "/");
+            refSale.push().setValue(getSalesTransaction(), new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+
+                    if (databaseError != null) {
+                        Toast.makeText(SellActivity.this, "Error saving transaction, please try later", Toast.LENGTH_LONG).show();
+                    }
+                    if (databaseReference != null) {
+                        Toast.makeText(SellActivity.this, "Save successfull", Toast.LENGTH_LONG).show();
+                        name.setText(null);
+                        name.requestFocus();
+                        price.setText(null);
+                        mobile.setText(null);
+                        city.setText(null);
+                        comments.setText(null);
+                        balance.setText(null);
+                        advance.setText(null);
+                        modelNameSpinner.setSelection(0);
+                        locationSpinner.setSelection(0);
+
+                    }
+                }
+            });
+            //on successfull save print 2 copies
+            increse = true;
+            receiptno();
+        }
     }
 
     private Sell getSalesTransaction() {
+        String settled = "false";
+        SimpleDateFormat datetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        if (convertDouble(balance.getText().toString()) == 0)
+            settled = "true";
 
-        SimpleDateFormat datetime = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
         return new Sell(receiptNo.getText().toString(),
                 datetime.format(new Date().getTime()),
                 name.getText().toString(),
@@ -234,11 +261,11 @@ public class SellActivity extends AppCompatActivity {
                 balance.getText().toString(),
                 modelNameSpinner.getSelectedItem().toString(),
                 locationSpinner.getSelectedItem().toString(),
-                "false");
+                settled);
     }
 
     private void receiptno() {
-        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
+        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + getTime("y") + "/receiptno");
         showProgressBar(true);
         rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -272,37 +299,6 @@ public class SellActivity extends AppCompatActivity {
             }
         });
     }
-
-    /*private void receiptno() {
-        refYear.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                Integer currentValue = mutableData.getValue(Integer.class);
-                receiptNo.setText(currentValue+1+"");
-                System.out.println("This is the curent value x" + currentValue);
-
-                if (currentValue == null) {
-                    mutableData.setValue(1);
-                    receiptNo.setText("1");
-                } else {
-                    if (increse) {
-                        mutableData.setValue(currentValue + 1);
-                        receiptNo.setText(currentValue+2+"");
-                        increse = false;
-                    }
-                }
-
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(
-                    DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
-                System.out.println("Transaction completed");
-
-            }
-        });
-    }*/
 
     private String getTime(String time) {
         Date dt = new Date();

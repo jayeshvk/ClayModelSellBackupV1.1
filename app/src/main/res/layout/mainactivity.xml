@@ -4,20 +4,28 @@
     android:layout_height="wrap_content"
     android:layout_centerVertical="true"
     android:layout_gravity="center"
+    android:layout_marginLeft="100sp"
+    android:layout_marginRight="100sp"
     android:orientation="vertical">
 
 
     <Button
         android:id="@+id/sell"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="sell"
-        android:onClick="buttonSell"/>
+        android:onClick="buttonSell"
+        android:text="sell" />
+
+    <Button
+        android:id="@+id/deliver"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Deliver" />
 
     <Button
         android:id="@+id/locations"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:onClick="buttonLocations"
@@ -25,7 +33,7 @@
 
     <Button
         android:id="@+id/claymodels"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:onClick="buttonClayModels"
@@ -33,14 +41,15 @@
 
     <Button
         android:id="@+id/buttonLogout"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:onClick="buttonLogout"
         android:text="Logout" />
+
     <Button
         android:id="@+id/buttonExit"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:onClick="buttonExit"
