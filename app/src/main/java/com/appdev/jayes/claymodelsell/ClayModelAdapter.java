@@ -29,7 +29,7 @@ public class ClayModelAdapter extends ArrayAdapter<ClayModel> {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         View listItem = convertView;
         if (listItem == null)
-            listItem = LayoutInflater.from(mContext).inflate(R.layout.model_list_item, parent, false);
+            listItem = LayoutInflater.from(mContext).inflate(R.layout.claymodel_list_item, parent, false);
 
         ClayModel currentModel = modelsList.get(position);
 

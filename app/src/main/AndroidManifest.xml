@@ -19,7 +19,8 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".LocationsActivity" />
         <activity android:name=".ClayModelsActivity" />
-        <activity android:name=".SellActivity"></activity>
+        <activity android:name=".SellActivity" />
+        <activity android:name=".deliver"></activity>
     </application>
 
 </manifest>

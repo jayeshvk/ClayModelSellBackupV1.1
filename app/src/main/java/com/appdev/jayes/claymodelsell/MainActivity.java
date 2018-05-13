@@ -21,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainactivity);
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        DatabaseReference root = FirebaseDatabase.getInstance().getReference("users");
+        root.keepSynced(true);
 
     }
 
@@ -66,5 +68,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void buttonSell(View view) {
         startActivity(new Intent(MainActivity.this, SellActivity.class));
+    }
+
+    public void buttonDeliver(View view) {
+        startActivity(new Intent(MainActivity.this, deliver.class));
     }
 }

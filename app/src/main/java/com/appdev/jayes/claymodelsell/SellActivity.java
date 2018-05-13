@@ -213,8 +213,7 @@ public class SellActivity extends AppCompatActivity {
                     "users/" +
                             user.getUid() +
                             "/sales/" +
-                            getTime("y") + "/" +
-                            getTime("m") + "/");
+                            getTime("y") + "/");
             refSale.push().setValue(getSalesTransaction(), new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
@@ -252,7 +251,7 @@ public class SellActivity extends AppCompatActivity {
 
         return new Sell(receiptNo.getText().toString(),
                 datetime.format(new Date().getTime()),
-                name.getText().toString(),
+                name.getText().toString().toLowerCase(),
                 mobile.getText().toString(),
                 city.getText().toString(),
                 comments.getText().toString(),
