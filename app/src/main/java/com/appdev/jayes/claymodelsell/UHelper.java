@@ -236,4 +236,9 @@ public class UHelper {
         }
         return time;
     }
+
+    //for use with Emoji 24/06/2018 jayesh
+    public String getEmojiByUnicode(int unicode){
+        return new String(Character.toChars(unicode));
+    }
 }

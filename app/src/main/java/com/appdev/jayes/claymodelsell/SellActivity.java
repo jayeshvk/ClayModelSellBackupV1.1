@@ -236,6 +236,10 @@ public class SellActivity extends AppCompatActivity {
         SimpleDateFormat datetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         if (UHelper.parseDouble(balance.getText().toString()) == 0)
             settled = "true";
+        String modelname = "";
+
+        if (modelNameSpinner.getSelectedItemPosition() > 0)
+            modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
 
         return new SellModel(receiptNo.getText().toString(),
                 datetime.format(new Date().getTime()),
@@ -247,7 +251,7 @@ public class SellActivity extends AppCompatActivity {
                 advance.getText().toString(),
                 balance.getText().toString(),
                 // modelNameSpinner.getSelectedItem().toString(),
-                modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey(),
+                modelname,
                 locationSpinner.getSelectedItem().toString(),
                 settled);
     }

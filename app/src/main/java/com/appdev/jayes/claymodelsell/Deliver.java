@@ -75,14 +75,12 @@ public class Deliver extends AppCompatActivity {
         mAdapter = new ThreeViewAdapter(this, tempArray);
         lv.setAdapter(mAdapter);
 
-
-        lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 System.out.println(salesArray.get(position).getName());
                 transactionID = position;
                 showInputDialog(salesArray.get(position));
-                return false;
             }
         });
 
@@ -242,8 +240,6 @@ public class Deliver extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String temp = parent.getItemAtPosition(position).toString();
                 if (position == 0) {
-                    price.setText(null);
-                    balance.setText(null);
 
                 } else {
                     price.setText(modelList.get(position - 1).getModelPrice());
@@ -350,7 +346,7 @@ public class Deliver extends AppCompatActivity {
                         });
                     }
                 })
-                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Update", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
 
                         if ((name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)) {
@@ -377,10 +373,14 @@ public class Deliver extends AppCompatActivity {
                     }
 
                     private SellModel getSalesTransaction() {
+
                         String settled = "false";
                         SimpleDateFormat datetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
                         if (UHelper.parseDouble(balance.getText().toString()) == 0)
                             settled = "true";
+                        String modelname = "";
+                        if (modelNameSpinner.getSelectedItemPosition() > 0)
+                            modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
 
                         return new SellModel(salesArray.get(transactionID).getReceiptNo(),
                                 datetime.format(new Date().getTime()),
@@ -391,7 +391,7 @@ public class Deliver extends AppCompatActivity {
                                 price.getText().toString(),
                                 advance.getText().toString(),
                                 balance.getText().toString(),
-                                modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey(),
+                                modelname,
                                 locationSpinner.getSelectedItem().toString(),
                                 settled);
                     }
