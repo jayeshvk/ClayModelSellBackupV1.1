@@ -20,7 +20,8 @@
         <activity android:name=".LocationsActivity" />
         <activity android:name=".ClayModelsActivity" />
         <activity android:name=".SellActivity" />
-        <activity android:name=".deliver"></activity>
+        <activity android:name=".Deliver" />
+        <activity android:name=".Main2Activity" />
     </application>
 
 </manifest>

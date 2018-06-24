@@ -8,7 +8,6 @@ import android.view.KeyEvent;
 import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -71,6 +70,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buttonDeliver(View view) {
-        startActivity(new Intent(MainActivity.this, deliver.class));
+        startActivity(new Intent(MainActivity.this, Deliver.class));
     }
 }

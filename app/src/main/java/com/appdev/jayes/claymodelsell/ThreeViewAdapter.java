@@ -13,12 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class ClayModelAdapter extends ArrayAdapter<ClayModel> {
+public class ThreeViewAdapter extends ArrayAdapter<ClayModel> {
 
     private Context mContext;
     private List<ClayModel> modelsList = new ArrayList<>();
 
-    public ClayModelAdapter(@NonNull Context context, ArrayList<ClayModel> list) {
+    public ThreeViewAdapter(@NonNull Context context, ArrayList<ClayModel> list) {
         super(context, 0, list);
         mContext = context;
         modelsList = list;
@@ -33,9 +33,8 @@ public class ClayModelAdapter extends ArrayAdapter<ClayModel> {
 
         ClayModel currentModel = modelsList.get(position);
 
-
         TextView guid = (TextView) listItem.findViewById(R.id.guidText);
-        guid.setText(currentModel.getGuid());
+        guid.setText(currentModel.getKey());
 
         TextView modelName = (TextView) listItem.findViewById(R.id.modelText);
         modelName.setText(currentModel.getModelName());

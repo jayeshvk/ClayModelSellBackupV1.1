@@ -10,7 +10,7 @@
 
 
     <Button
-        android:id="@+id/sell"
+        android:key="@+id/sell"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -18,14 +18,14 @@
         android:text="sell" />
 
     <Button
-        android:id="@+id/deliver"
+        android:key="@+id/deliver"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Deliver"
         android:onClick="buttonDeliver"/>
 
     <Button
-        android:id="@+id/locations"
+        android:key="@+id/locations"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -33,7 +33,7 @@
         android:text="locations" />
 
     <Button
-        android:id="@+id/claymodels"
+        android:key="@+id/claymodels"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -41,7 +41,7 @@
         android:text="clay model" />
 
     <Button
-        android:id="@+id/buttonLogout"
+        android:key="@+id/buttonLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -49,7 +49,7 @@
         android:text="Logout" />
 
     <Button
-        android:id="@+id/buttonExit"
+        android:key="@+id/buttonExit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"

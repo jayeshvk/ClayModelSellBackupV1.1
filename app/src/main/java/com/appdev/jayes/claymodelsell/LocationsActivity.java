@@ -8,9 +8,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,7 +23,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 
 public class LocationsActivity extends AppCompatActivity {
@@ -34,7 +39,8 @@ public class LocationsActivity extends AppCompatActivity {
     private Button saveButton;
 
     private ListView listView;
-    private LocationAdapter mAdapter;
+    //private LocationAdapter mAdapter;
+    LocationAdapter mAdapter;
     private ArrayList<Location> locationsList = new ArrayList<>();
 
 
@@ -48,7 +54,10 @@ public class LocationsActivity extends AppCompatActivity {
         FirebaseUser user = mAuth.getCurrentUser();
 
         listView = (ListView) findViewById(R.id.movies_list);
+        List<Map<String, String>> message = null;
         mAdapter = new LocationAdapter(this, locationsList);
+
+        //mAdapter = new LocationAdapter(this, locationsList);
         listView.setAdapter(mAdapter);
 
         mDatabase = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");

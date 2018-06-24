@@ -1,7 +1,7 @@
 package com.appdev.jayes.claymodelsell;
 
-public class Sell {
-    private String guid;
+public class SellModel {
+    private String key;
     private String receiptNo;
     private String date;
 
@@ -17,23 +17,23 @@ public class Sell {
     private String location;
     private String settled;
 
-    public Sell() {
+    public SellModel() {
     }
 
-    public Sell(String receiptNo,
-                String date,
+    public SellModel(String receiptNo,
+                     String date,
 
-                String name,
-                String mobile,
-                String city,
-                String comments,
+                     String name,
+                     String mobile,
+                     String city,
+                     String comments,
 
-                String price,
-                String advance,
-                String balance,
-                String modelName,
-                String location,
-                String settled
+                     String price,
+                     String advance,
+                     String balance,
+                     String modelName,
+                     String location,
+                     String settled
 
     ) {
         this.receiptNo = receiptNo;
@@ -52,24 +52,24 @@ public class Sell {
         this.settled = settled;
     }
 
-    public Sell(String guid,
-                String receiptNo,
-                String date,
+    public SellModel(String key,
+                     String receiptNo,
+                     String date,
 
-                String name,
-                String mobile,
-                String city,
-                String comments,
+                     String name,
+                     String mobile,
+                     String city,
+                     String comments,
 
-                String price,
-                String advance,
-                String balance,
-                String modelName,
-                String location,
-                String settled
+                     String price,
+                     String advance,
+                     String balance,
+                     String modelName,
+                     String location,
+                     String settled
 
     ) {
-        this.guid = guid;
+        this.key = key;
         this.receiptNo = receiptNo;
         this.date = date;
 
@@ -94,12 +94,12 @@ public class Sell {
         this.settled = settled;
     }
 
-    public String getGuid() {
-        return guid;
+    public String getKey() {
+        return key;
     }
 
-    public void setGuid(String guid) {
-        this.guid = guid;
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getReceiptNo() {

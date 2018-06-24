@@ -33,7 +33,7 @@ public class ClayModelsActivity extends AppCompatActivity {
     private Button saveButton;
 
     private ListView listView;
-    private ClayModelAdapter mAdapter;
+    private ThreeViewAdapter mAdapter;
     private ArrayList<ClayModel> modelList = new ArrayList<>();
 
 
@@ -47,7 +47,7 @@ public class ClayModelsActivity extends AppCompatActivity {
         FirebaseUser user = mAuth.getCurrentUser();
 
         listView = (ListView) findViewById(R.id.models_list);
-        mAdapter = new ClayModelAdapter(this, modelList);
+        mAdapter = new ThreeViewAdapter(this, modelList);
         listView.setAdapter(mAdapter);
 
         mDatabase = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
@@ -71,7 +71,7 @@ public class ClayModelsActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 System.out.println(dataSnapshot.getKey());
                 ClayModel temp = dataSnapshot.getValue(ClayModel.class);
-                temp.setGuid(dataSnapshot.getKey());
+                temp.setKey(dataSnapshot.getKey());
                 modelList.add(temp);
                 mAdapter.notifyDataSetChanged();
             }
@@ -106,6 +106,8 @@ public class ClayModelsActivity extends AppCompatActivity {
     }
 
     private void modifyData(final ClayModel modelData, final int position) {
+        modelName.setText(modelData.getModelName());
+        modelPrice.setText(modelData.getModelPrice());
         LayoutInflater layoutInflater = getLayoutInflater();
         View v = layoutInflater.inflate(R.layout.modifymodel, null);
 
@@ -121,15 +123,15 @@ public class ClayModelsActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
                                 ClayModel model = new ClayModel(etmodelName.getText().toString(), etmodelPrice.getText().toString());
-                                mDatabase.child(modelData.getGuid()).setValue(model);
-                                modelList.set(position, new ClayModel(modelData.getGuid(), etmodelName.getText().toString(), etmodelPrice.getText().toString()));
+                                mDatabase.child(modelData.getKey()).setValue(model);
+                                modelList.set(position, new ClayModel(modelData.getKey(), etmodelName.getText().toString(), etmodelPrice.getText().toString()));
                             }
                         }
                 )
                 .setNegativeButton("Delete", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        mDatabase.child(modelData.getGuid()).removeValue();
+                        mDatabase.child(modelData.getKey()).removeValue();
                         modelList.remove(position);
                     }
                 }).show();

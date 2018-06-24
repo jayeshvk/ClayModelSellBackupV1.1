@@ -3,10 +3,10 @@ package com.appdev.jayes.claymodelsell;
 public class ClayModel {
     private String modelName;
     private String modelPrice;
-    private String guid;
+    private String key;
 
-    public ClayModel(String guid, String modelName, String modelPrice) {
-        this.guid = guid;
+    public ClayModel(String key, String modelName, String modelPrice) {
+        this.key = key;
         this.modelName = modelName;
         this.modelPrice = modelPrice;
     }
@@ -35,11 +35,11 @@ public class ClayModel {
         this.modelPrice = modelPrice;
     }
 
-    public String getGuid() {
-        return guid;
+    public String getKey() {
+        return key;
     }
 
-    public void setGuid(String guid) {
-        this.guid = guid;
+    public void setKey(String key) {
+        this.key = key;
     }
 }

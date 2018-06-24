@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.appdev.jayes.claymodelsell.R;
+
 import java.util.ArrayList;
 import java.util.List;
 

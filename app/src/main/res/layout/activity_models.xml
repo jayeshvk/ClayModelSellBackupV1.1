@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".LocationsActivity">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,30 +12,32 @@
         android:orientation="vertical">
 
         <EditText
-            android:id="@+id/modelName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
+            android:hint="Clay Model Name"
             android:inputType="text"
-            android:hint="Clay Model Name" />
+            android:id="@+id/modelName" />
+
         <EditText
-            android:id="@+id/modelPrice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
+            android:hint="Default price"
             android:inputType="text"
-            android:hint="Default price" />
+            android:id="@+id/modelPrice" />
+
         <Button
-            android:id="@+id/save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/save"
             android:text="Save" />
 
         <ListView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/models_list"/>
+            android:id="@+id/models_list" />
     </LinearLayout>
 
 
-</android.support.constraint.ConstraintLayout>
+</LinearLayout>

@@ -1,8 +1,6 @@
 package com.appdev.jayes.claymodelsell;
 
 import android.app.ProgressDialog;
-import android.icu.util.Calendar;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -18,16 +16,12 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -55,6 +49,8 @@ public class SellActivity extends AppCompatActivity {
 
     private ProgressDialog pDialog;
 
+    ArrayList<ClayModel> modelList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +73,8 @@ public class SellActivity extends AppCompatActivity {
         pDialog = new ProgressDialog(this);
         pDialog.setMessage("Please wait...");
         pDialog.setCancelable(false);
+
+        modelList = new ArrayList<>();
 
         refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
         refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
@@ -120,10 +118,12 @@ public class SellActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 showProgressBar(false);
                 for (DataSnapshot dts : dataSnapshot.getChildren()) {
-                    model mdl = dts.getValue(model.class);
-                    System.out.println(mdl.getModelName());
-                    modelNameList.add(mdl.getModelName() + "-" + mdl.modelPrice);
+                    ClayModel mdl = dts.getValue(ClayModel.class);
+                    mdl.setKey(dts.getKey());
+                    modelNameList.add(mdl.getModelName());
+                    modelList.add(mdl);
                 }
+
             }
 
             @Override
@@ -141,9 +141,7 @@ public class SellActivity extends AppCompatActivity {
                     balance.setText(null);
 
                 } else {
-                    String[] data = temp.split("-", 2);
-                    if (data.length > 1)
-                        price.setText(data[1]);
+                    price.setText(modelList.get(position - 1).getModelPrice());
                 }
             }
 
@@ -160,7 +158,7 @@ public class SellActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Double bal = convertDouble(s.toString()) - convertDouble(advance.getText().toString());
+                Double bal = UHelper.parseDouble(s.toString()) - UHelper.parseDouble(advance.getText().toString());
                 balance.setText(bal.toString());
             }
 
@@ -179,7 +177,7 @@ public class SellActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
 
-                Double bal = convertDouble(price.getText().toString()) - convertDouble(s.toString());
+                Double bal = UHelper.parseDouble(price.getText().toString()) - UHelper.parseDouble(s.toString());
                 balance.setText(bal.toString());
             }
 
@@ -189,16 +187,6 @@ public class SellActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-    private Double convertDouble(String data) {
-        Double d = 0.00;
-        try {
-            d = Double.parseDouble(data);
-        } catch (Exception e) {
-            d = 0.0;
-        }
-        return d;
     }
 
     public void buttonSave(View view) {
@@ -213,7 +201,7 @@ public class SellActivity extends AppCompatActivity {
                     "users/" +
                             user.getUid() +
                             "/sales/" +
-                            getTime("y") + "/");
+                            UHelper.getTime("y") + "/");
             refSale.push().setValue(getSalesTransaction(), new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
@@ -243,13 +231,13 @@ public class SellActivity extends AppCompatActivity {
         }
     }
 
-    private Sell getSalesTransaction() {
+    private SellModel getSalesTransaction() {
         String settled = "false";
         SimpleDateFormat datetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        if (convertDouble(balance.getText().toString()) == 0)
+        if (UHelper.parseDouble(balance.getText().toString()) == 0)
             settled = "true";
 
-        return new Sell(receiptNo.getText().toString(),
+        return new SellModel(receiptNo.getText().toString(),
                 datetime.format(new Date().getTime()),
                 name.getText().toString().toLowerCase(),
                 mobile.getText().toString(),
@@ -258,13 +246,14 @@ public class SellActivity extends AppCompatActivity {
                 price.getText().toString(),
                 advance.getText().toString(),
                 balance.getText().toString(),
-                modelNameSpinner.getSelectedItem().toString(),
+                // modelNameSpinner.getSelectedItem().toString(),
+                modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey(),
                 locationSpinner.getSelectedItem().toString(),
                 settled);
     }
 
     private void receiptno() {
-        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + getTime("y") + "/receiptno");
+        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
         showProgressBar(true);
         rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -297,49 +286,6 @@ public class SellActivity extends AppCompatActivity {
                 Toast.makeText(SellActivity.this, "Error with firebase :" + databaseError, Toast.LENGTH_LONG).show();
             }
         });
-    }
-
-    private String getTime(String time) {
-        Date dt = new Date();
-        SimpleDateFormat datetime = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
-        SimpleDateFormat year = new SimpleDateFormat("yyyy");
-        SimpleDateFormat month = new SimpleDateFormat("MMM");
-        SimpleDateFormat date = new SimpleDateFormat("dd");
-
-        switch (time) {
-            case "d":
-                return date.format(dt.getTime());
-            case "m":
-                return month.format(dt.getTime());
-            case "y":
-                return year.format(dt.getTime());
-            case "dt":
-                return datetime.format(dt.getTime());
-            default:
-                datetime.format(dt.getTime());
-        }
-        return time;
-    }
-
-    private static class model {
-        String modelName;
-        String modelPrice;
-
-        model(String modelName, String modelPrice) {
-            this.modelName = modelName;
-            this.modelPrice = modelPrice;
-        }
-
-        public String getModelName() {
-            return modelName;
-        }
-
-        public String getModelPrice() {
-            return modelPrice;
-        }
-
-        model() {
-        }
     }
 
     private void showProgressBar(final boolean visibility) {
