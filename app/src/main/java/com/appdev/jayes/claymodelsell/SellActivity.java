@@ -50,6 +50,7 @@ public class SellActivity extends AppCompatActivity {
     private ProgressDialog pDialog;
 
     ArrayList<ClayModel> modelList;
+    ArrayList<Location> locationList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +75,9 @@ public class SellActivity extends AppCompatActivity {
         pDialog.setMessage("Please wait...");
         pDialog.setCancelable(false);
 
+
         modelList = new ArrayList<>();
+        locationList = new ArrayList<>();
 
         refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
         refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
@@ -84,15 +87,17 @@ public class SellActivity extends AppCompatActivity {
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
         modelNameSpinner = (Spinner) findViewById(R.id.modelNameSpinner);
 
-        final List<String> locationList = new ArrayList<>();
-        locationList.add("Select location");
-        final List<String> modelNameList = new ArrayList<>();
-        modelNameList.add("Select Clay model");
+        final List<String> tempLocationList = new ArrayList<>();
+        final List<String> tempModelNameList = new ArrayList<>();
 
-        ArrayAdapter<String> locationAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, locationList);
+        tempLocationList.add("Select location");
+        tempModelNameList.add("Select Clay model");
+
+        ArrayAdapter<String> locationAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempLocationList);
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         locationSpinner.setAdapter(locationAdapter);
-        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, modelNameList);
+
+        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempModelNameList);
         modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelNameSpinner.setAdapter(modelAdapter);
 
@@ -103,7 +108,10 @@ public class SellActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 showProgressBar(false);
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    locationList.add(child.getValue().toString());
+                    Location loc = child.getValue(Location.class);
+                    loc.setGuid(child.getKey());
+                    tempLocationList.add(loc.getLocationName());
+                    locationList.add(loc);
                 }
             }
 
@@ -120,7 +128,7 @@ public class SellActivity extends AppCompatActivity {
                 for (DataSnapshot dts : dataSnapshot.getChildren()) {
                     ClayModel mdl = dts.getValue(ClayModel.class);
                     mdl.setKey(dts.getKey());
-                    modelNameList.add(mdl.getModelName());
+                    tempModelNameList.add(mdl.getModelName());
                     modelList.add(mdl);
                 }
 
@@ -237,9 +245,14 @@ public class SellActivity extends AppCompatActivity {
         if (UHelper.parseDouble(balance.getText().toString()) == 0)
             settled = "true";
         String modelname = "";
+        String locationname = "";
 
         if (modelNameSpinner.getSelectedItemPosition() > 0)
-            modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
+            modelname = modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
+
+        if (locationSpinner.getSelectedItemPosition() > 0)
+            locationname = locationList.get(locationSpinner.getSelectedItemPosition() - 1).getGuid();
+
 
         return new SellModel(receiptNo.getText().toString(),
                 datetime.format(new Date().getTime()),
@@ -252,7 +265,7 @@ public class SellActivity extends AppCompatActivity {
                 balance.getText().toString(),
                 // modelNameSpinner.getSelectedItem().toString(),
                 modelname,
-                locationSpinner.getSelectedItem().toString(),
+                locationname,
                 settled);
     }
 

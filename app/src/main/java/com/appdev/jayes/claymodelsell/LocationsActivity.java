@@ -70,7 +70,8 @@ public class LocationsActivity extends AppCompatActivity {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDatabase.push().setValue(locationText.getText().toString());
+                Location loc = new Location(locationText.getText().toString());
+                mDatabase.push().setValue(loc);
                 locationText.setText(null);
             }
         });
@@ -78,7 +79,8 @@ public class LocationsActivity extends AppCompatActivity {
         mDatabase.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Location temp = new Location(dataSnapshot.getKey(), dataSnapshot.getValue(String.class));
+                Location temp = dataSnapshot.getValue(Location.class);
+                temp.setGuid(dataSnapshot.getKey());
                 locationsList.add(temp);
                 mAdapter.notifyDataSetChanged();
             }

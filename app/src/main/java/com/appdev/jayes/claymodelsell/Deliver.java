@@ -50,8 +50,9 @@ public class Deliver extends AppCompatActivity {
     ArrayList<ClayModel> mtempArray = new ArrayList<>();
 
     ArrayList<ClayModel> modelList = new ArrayList<>();
-    List<String> locationList = new ArrayList<>();
-    List<String> modelNameList = new ArrayList<>();
+    ArrayList<Location> locationList = new ArrayList<>();
+    List<String> tempLocationList = new ArrayList<>();
+    List<String> tempModelNameList = new ArrayList<>();
 
     int transactionID;
 
@@ -85,13 +86,16 @@ public class Deliver extends AppCompatActivity {
         });
 
         { // load the datat into array list
-            locationList.add("Select location");
-            modelNameList.add("Select Clay model");
+            tempLocationList.add("Select location");
+            tempModelNameList.add("Select Clay model");
             refLocation.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        locationList.add(child.getValue().toString());
+                        Location loc = child.getValue(Location.class);
+                        loc.setGuid(child.getKey());
+                        tempLocationList.add(loc.getLocationName());
+                        locationList.add(loc);
                     }
                 }
 
@@ -107,7 +111,7 @@ public class Deliver extends AppCompatActivity {
                     for (DataSnapshot dts : dataSnapshot.getChildren()) {
                         ClayModel mdl = dts.getValue(ClayModel.class);
                         mdl.setKey(dts.getKey());
-                        modelNameList.add(mdl.getModelName());
+                        tempModelNameList.add(mdl.getModelName());
                         modelList.add(mdl);
                     }
 
@@ -215,10 +219,10 @@ public class Deliver extends AppCompatActivity {
         final Spinner modelNameSpinner = (Spinner) promptView.findViewById(R.id.modelNameSpinner);
         final Spinner locationSpinner = (Spinner) promptView.findViewById(R.id.locationSpinner);
 
-        ArrayAdapter<String> locationAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, locationList);
+        ArrayAdapter<String> locationAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempLocationList);
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         locationSpinner.setAdapter(locationAdapter);
-        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, modelNameList);
+        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempModelNameList);
         modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelNameSpinner.setAdapter(modelAdapter);
 
@@ -229,7 +233,7 @@ public class Deliver extends AppCompatActivity {
             }
         }
         for (int i = 0; i < locationList.size(); i++) {
-            if (temp.getLocation().equals(locationList.get(i))) {
+            if (temp.getLocation().equals(locationList.get(i).getGuid())) {
                 locationSpinner.setSelection(i + 1);
                 break;
             }
@@ -251,44 +255,6 @@ public class Deliver extends AppCompatActivity {
 
             }
         });
-
-        price.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Double bal = UHelper.parseDouble(s.toString()) - UHelper.parseDouble(advance.getText().toString());
-                balance.setText(bal.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-        advance.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-
-                Double bal = UHelper.parseDouble(price.getText().toString()) - UHelper.parseDouble(s.toString());
-                balance.setText(bal.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
         price.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -368,8 +334,6 @@ public class Deliver extends AppCompatActivity {
                                 }
                             });
                         }
-
-
                     }
 
                     private SellModel getSalesTransaction() {
@@ -379,8 +343,11 @@ public class Deliver extends AppCompatActivity {
                         if (UHelper.parseDouble(balance.getText().toString()) == 0)
                             settled = "true";
                         String modelname = "";
+                        String locationname = "";
                         if (modelNameSpinner.getSelectedItemPosition() > 0)
                             modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
+                        if (locationSpinner.getSelectedItemPosition() > 0)
+                            locationname = locationList.get(locationSpinner.getSelectedItemPosition() - 1).getGuid();
 
                         return new SellModel(salesArray.get(transactionID).getReceiptNo(),
                                 datetime.format(new Date().getTime()),
@@ -392,7 +359,7 @@ public class Deliver extends AppCompatActivity {
                                 advance.getText().toString(),
                                 balance.getText().toString(),
                                 modelname,
-                                locationSpinner.getSelectedItem().toString(),
+                                locationname,
                                 settled);
                     }
                 })
