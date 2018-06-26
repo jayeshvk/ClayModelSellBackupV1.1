@@ -2,12 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_centerVertical="true"
     android:layout_gravity="center"
     android:layout_marginLeft="100sp"
     android:layout_marginRight="100sp"
-    android:orientation="vertical">
-
+    android:orientation="vertical"
+    android:theme="@android:style/Theme.NoTitleBar">
 
     <Button
         android:key="@+id/sell"
@@ -25,20 +26,12 @@
         android:onClick="buttonDeliver"/>
 
     <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:key="@+id/locations"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="buttonLocations"
-        android:text="locations" />
-
-    <Button
-        android:key="@+id/claymodels"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="buttonClayModels"
-        android:text="clay model" />
+        android:onClick="buttonSettings"
+        android:text="Settings" />
 
     <Button
         android:key="@+id/buttonLogout"

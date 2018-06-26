@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.appdev.jayes.claymodelsell">
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -22,6 +23,7 @@
         <activity android:name=".SellActivity" />
         <activity android:name=".Deliver" />
         <activity android:name=".Main2Activity" />
+        <activity android:name=".Settings"></activity>
     </application>
 
 </manifest>

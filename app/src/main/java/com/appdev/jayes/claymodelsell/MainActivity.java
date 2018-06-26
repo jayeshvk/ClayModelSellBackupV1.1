@@ -3,8 +3,11 @@ package com.appdev.jayes.claymodelsell;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,12 +34,8 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(MainActivity.this, Login.class));
     }
 
-    public void buttonLocations(View view) {
-        startActivity(new Intent(MainActivity.this, LocationsActivity.class));
-    }
-
-    public void buttonClayModels(View view) {
-        startActivity(new Intent(MainActivity.this, ClayModelsActivity.class));
+    public void buttonSettings(View view) {
+        startActivity(new Intent(this, Settings.class));
     }
 
     public void buttonExit(View view) {
@@ -72,4 +71,5 @@ public class MainActivity extends AppCompatActivity {
     public void buttonDeliver(View view) {
         startActivity(new Intent(MainActivity.this, Deliver.class));
     }
+
 }
