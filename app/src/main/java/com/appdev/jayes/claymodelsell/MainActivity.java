@@ -1,5 +1,6 @@
 package com.appdev.jayes.claymodelsell;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
@@ -22,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainactivity);
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        //FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         DatabaseReference root = FirebaseDatabase.getInstance().getReference("users");
         root.keepSynced(true);
 
@@ -65,11 +67,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buttonSell(View view) {
-        startActivity(new Intent(MainActivity.this, SellActivity.class));
+        if (isBluetoothEnabled())
+            startActivity(new Intent(MainActivity.this, SellActivity.class));
+    }
+
+    private boolean isBluetoothEnabled() {
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Device does not support bluetooth", Toast.LENGTH_LONG).show();
+            return false;
+        } else {
+            if (!mBluetoothAdapter.isEnabled()) {
+                Toast.makeText(this, "Switch on Bluetooth to use printer", Toast.LENGTH_LONG).show();
+                return false;
+            } else {
+                return true;
+            }
+        }
     }
 
     public void buttonDeliver(View view) {
         startActivity(new Intent(MainActivity.this, Deliver.class));
     }
-
 }

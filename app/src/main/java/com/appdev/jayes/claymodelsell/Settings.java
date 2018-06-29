@@ -1,71 +1,88 @@
 package com.appdev.jayes.claymodelsell;
 
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
+import android.content.IntentFilter;
+import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
-import java.util.UUID;
+import com.cie.btp.CieBluetoothPrinter;
+import com.cie.btp.DebugLog;
+import com.cie.btp.PrinterWidth;
+
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_DEVICE_NAME;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_CONNECTED;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_CONNECTING;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_LISTEN;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_NONE;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_MESSAGES;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_MSG;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NAME;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOTIFICATION_ERROR_MSG;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOTIFICATION_MSG;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOT_CONNECTED;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOT_FOUND;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_SAVED;
+import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_STATUS;
 
 public class Settings extends AppCompatActivity {
 
-    BluetoothAdapter bluetoothAdapter;
-    BluetoothSocket bluetoothSocket;
-    BluetoothDevice bluetoothDevice;
+    private TextView tvStatus;
 
-    OutputStream outputStream;
-    InputStream inputStream;
-    Thread thread;
+    private static final int BARCODE_WIDTH = 384;
+    private static final int BARCODE_HEIGHT = 100;
 
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
+    public static CieBluetoothPrinter mPrinter = CieBluetoothPrinter.INSTANCE;
+    private int imageAlignment = 1;
 
-    TextView lblPrinterName;
+    private BroadcastReceiver mReceiver;
+
+    ProgressDialog pdWorkInProgress;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        lblPrinterName = (TextView) findViewById(R.id.lblPrinterName);
+        pdWorkInProgress = new ProgressDialog(this);
+        pdWorkInProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+
+        BluetoothAdapter mAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (mAdapter == null) {
+            Toast.makeText(this, "No Bluetooth devide found", Toast.LENGTH_SHORT).show();
+        }
+
+        try {
+            mPrinter.initService(Settings.this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void btnConnect(View view) {
-        try {
-            FindBluetoothDevice();
-            openBluetoothPrinter();
+        mPrinter.disconnectFromPrinter();
+        mPrinter.selectPrinter(Settings.this);
+        mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
-    public void btnDisconnect(View view) {
-        try {
-            disconnectBT();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    public void btnClearPrinter(View view) {
+        mPrinter.clearPreferredPrinter();
     }
 
     public void btnPrint(View view) {
-        try {
-            printData();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+
     }
 
     public void buttonLocations(View view) {
@@ -76,138 +93,15 @@ public class Settings extends AppCompatActivity {
         startActivity(new Intent(this, ClayModelsActivity.class));
     }
 
-    void FindBluetoothDevice() {
 
-        try {
-
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (bluetoothAdapter == null) {
-                lblPrinterName.setText("No Bluetooth Adapter found");
-            }
-            if (bluetoothAdapter.isEnabled()) {
-                Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBT, 0);
-            }
-
-            Set<BluetoothDevice> pairedDevice = bluetoothAdapter.getBondedDevices();
-
-            if (pairedDevice.size() > 0) {
-                for (BluetoothDevice pairedDev : pairedDevice) {
-
-                    // My Bluetoth printer name is BTP_F09F1A
-                    if (pairedDev.getName().equals("BTP_F09F1A")) {
-                        bluetoothDevice = pairedDev;
-                        lblPrinterName.setText("Bluetooth Printer Attached: " + pairedDev.getName());
-                        break;
-                    }
-                }
-            }
-
-            lblPrinterName.setText("Bluetooth Printer Attached");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-    }
-
-    // Open Bluetooth Printer
-
-    void openBluetoothPrinter() throws IOException {
-        try {
-
-            //Standard uuid from string //
-            UUID uuidSting = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuidSting);
-            bluetoothSocket.connect();
-            outputStream = bluetoothSocket.getOutputStream();
-            inputStream = bluetoothSocket.getInputStream();
-
-            beginListenData();
-
-        } catch (Exception ex) {
-
+    private void savePrinterMac(String sMacAddr) {
+        if (sMacAddr.length() > 4) {
+            System.out.println("Mac Address " + sMacAddr);
+            tvStatus.setText("Preferred Printer saved");
+        } else {
+            tvStatus.setText("Preferred Printer cleared");
         }
     }
 
-    void beginListenData() {
-        try {
-
-            final Handler handler = new Handler();
-            final byte delimiter = 10;
-            stopWorker = false;
-            readBufferPosition = 0;
-            readBuffer = new byte[1024];
-
-            thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    while (!Thread.currentThread().isInterrupted() && !stopWorker) {
-                        try {
-                            int byteAvailable = inputStream.available();
-                            if (byteAvailable > 0) {
-                                byte[] packetByte = new byte[byteAvailable];
-                                inputStream.read(packetByte);
-
-                                for (int i = 0; i < byteAvailable; i++) {
-                                    byte b = packetByte[i];
-                                    if (b == delimiter) {
-                                        byte[] encodedByte = new byte[readBufferPosition];
-                                        System.arraycopy(
-                                                readBuffer, 0,
-                                                encodedByte, 0,
-                                                encodedByte.length
-                                        );
-                                        final String data = new String(encodedByte, "US-ASCII");
-                                        readBufferPosition = 0;
-                                        handler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                lblPrinterName.setText(data);
-                                            }
-                                        });
-                                    } else {
-                                        readBuffer[readBufferPosition++] = b;
-                                    }
-                                }
-                            }
-                        } catch (Exception ex) {
-                            stopWorker = true;
-                        }
-                    }
-
-                }
-            });
-
-            thread.start();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    // Printing Text to Bluetooth Printer //
-    void printData() throws IOException {
-        try {
-            String msg = " Clay model Sell printer testing";
-            msg += "\n";
-            outputStream.write(msg.getBytes());
-            lblPrinterName.setText("Printing Text...");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    // Disconnect Printer //
-    void disconnectBT() throws IOException {
-        try {
-            stopWorker = true;
-            outputStream.close();
-            inputStream.close();
-            bluetoothSocket.close();
-            lblPrinterName.setText("Printer Disconnected.");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
 
 }
