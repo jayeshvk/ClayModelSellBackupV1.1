@@ -1,5 +1,6 @@
 package com.appdev.jayes.claymodelsell;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -56,7 +57,6 @@ import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_LISTEN;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_NONE;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_MESSAGES;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_MSG;
-import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NAME;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOTIFICATION_ERROR_MSG;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOTIFICATION_MSG;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOT_CONNECTED;
@@ -90,16 +90,20 @@ public class SellActivity extends AppCompatActivity {
     ArrayList<Location> locationList;
 
     public static CieBluetoothPrinter mPrinter = CieBluetoothPrinter.INSTANCE;
-    private int imageAlignment = 1;
-    private BroadcastReceiver mReceiver;
     ProgressDialog pdWorkInProgress;
-
+    private boolean continueWithoutPrint;
+    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    public static final int REQUEST_ENABLE_BT = 9;
+    private static final int LEFT = 1;
+    private static final int RIGHT = -1;
+    private static final int CENTER = 0;
+    private String tempPrice, tempAdvance, tempBalance, tempModelName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sell);
-        //Typeface font = Typeface.createFromAsset(getAssets(), "Nirmala.ttf");
+
 
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
@@ -115,6 +119,7 @@ public class SellActivity extends AppCompatActivity {
 
         ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
+
         pDialog = new ProgressDialog(this);
         pDialog.setMessage("Please wait...");
         pDialog.setCancelable(false);
@@ -122,8 +127,6 @@ public class SellActivity extends AppCompatActivity {
         //printer relevant
         pdWorkInProgress = new ProgressDialog(this);
         pdWorkInProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-
-
         connectPrinter();
 
         modelList = new ArrayList<>();
@@ -151,7 +154,9 @@ public class SellActivity extends AppCompatActivity {
         modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelNameSpinner.setAdapter(modelAdapter);
 
+        //get Receipt number
         receiptno();
+
         showProgressBar(true);
         refLocation.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -250,10 +255,9 @@ public class SellActivity extends AppCompatActivity {
     public void buttonSave(View view) {
 
         //Validate and collect all data
-/*        if (name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)
+        if (name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)
             Toast.makeText(SellActivity.this, "Please enter all details", Toast.LENGTH_SHORT).show();
-        else*/
-        {
+        else {
 
             //save to database
             DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
@@ -270,6 +274,25 @@ public class SellActivity extends AppCompatActivity {
                     }
                     if (databaseReference != null) {
                         Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
+                        tempPrice = price.getText().toString();
+                        tempAdvance = advance.getText().toString();
+                        tempBalance = balance.getText().toString();
+                        tempModelName = modelNameSpinner.getSelectedItem().toString();
+                        //on successfull save print 2 copies
+                        increse = true;
+                        if (!continueWithoutPrint) {
+                            printReceipt();
+                            synchronized (this) {
+                                try {
+                                    wait(3000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            printReceipt();
+                        }
+                        //generate next receipt number
+                        receiptno();
                         name.setText(null);
                         name.requestFocus();
                         price.setText(null);
@@ -284,23 +307,100 @@ public class SellActivity extends AppCompatActivity {
                     }
                 }
             });
-            //on successfull save print 2 copies
-            increse = true;
-            printReceipt();
-            synchronized (this) {
-                try {
-                    wait(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            printReceipt();
-            //generate next receipt number
-            receiptno();
+
         }
     }
 
-    private void printReceipt() {
+    private SellModel getSalesTransaction() {
+        String settled = "false";
+        SimpleDateFormat datetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        if (UHelper.parseDouble(balance.getText().toString()) == 0)
+            settled = "true";
+        String modelname = "";
+        String locationname = "";
+
+        if (modelNameSpinner.getSelectedItemPosition() > 0)
+            modelname = modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
+
+        if (locationSpinner.getSelectedItemPosition() > 0)
+            locationname = locationList.get(locationSpinner.getSelectedItemPosition() - 1).getGuid();
+
+
+        return new SellModel(receiptNo.getText().toString(),
+                datetime.format(new Date().getTime()),
+                name.getText().toString().toLowerCase(),
+                mobile.getText().toString(),
+                city.getText().toString(),
+                comments.getText().toString(),
+                price.getText().toString(),
+                advance.getText().toString(),
+                balance.getText().toString(),
+                // modelNameSpinner.getSelectedItem().toString(),
+                modelname,
+                locationname,
+                settled);
+
+    }
+
+    private void showProgressBar(final boolean visibility) {
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                if (visibility)
+                    showpDialog();
+                else hidepDialog();
+            }
+        });
+    }
+
+    private void showpDialog() {
+        if (!pDialog.isShowing())
+            pDialog.show();
+    }
+
+    private void hidepDialog() {
+        if (pDialog.isShowing())
+            pDialog.dismiss();
+    }
+
+    private void receiptno() {
+        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
+        showProgressBar(true);
+        rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+//test data
+                showProgressBar(false);
+                int currentValue = 0;
+                String value;
+                try {
+                    value = dataSnapshot.getValue().toString();
+                } catch (Exception e) {
+                    value = null;
+                }
+
+                if (value == null) {
+                    receiptNo.setText(String.format("%04d", 1));
+                } else {
+                    currentValue = Integer.parseInt(value);
+                    receiptNo.setText(String.format("%04d", currentValue + 1));
+                }
+                if (increse) {
+                    rcptno.setValue(String.format("%04d", currentValue + 1));
+                    receiptNo.setText(String.format("%04d", currentValue + 2));
+                    increse = false;
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(SellActivity.this, "Error with firebase :" + databaseError, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+/*    private void printReceipt() {
+
         ArrayList<Bitmap> bmps = new ArrayList<Bitmap>();
 
         for (int i = 0; i < receiptNo.getText().toString().length(); i++) {
@@ -404,109 +504,76 @@ public class SellActivity extends AppCompatActivity {
         mPrinter.printLineFeed();
         mPrinter.resetPrinter();
 
+    }*/
+
+    private void printReceipt() {
+        mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
+        mPrinter.setAlignmentCenter();
+        int textSize = 25;
+
+        SellModel salesData = getSalesTransaction();
+
+        //Print logo
+        Bitmap logo = BitmapFactory.decodeResource(getResources(), R.mipmap.logo);
+        mPrinter.printGrayScaleImage(logo, 1);
+
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+
+        //Print receipt number
+        Typeface custom_font = Typeface.createFromAsset(getAssets(), "fonts/ErasBoldITC.ttf");
+        TextPaint textPaint = new TextPaint();
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(125);
+        textPaint.setTypeface(custom_font);
+        mPrinter.printUnicodeText(salesData.getReceiptNo(), Layout.Alignment.ALIGN_CENTER, textPaint);
+
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+        mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        mPrintUnicodeText("Dt:" + UHelper.dateFormatymdhmsTOddmyyyy(salesData.getDate()), textSize, RIGHT);
+        mPrintUnicodeText("Name  :" + salesData.getName(), textSize, LEFT);
+        mPrintUnicodeText("Mob   :" + salesData.getMobile(), textSize, LEFT);
+        if (!tempModelName.contains("Model"))
+            mPrintUnicodeText("Model : " + tempModelName, 32, LEFT);
+        mPrintUnicodeText("City  :" + salesData.getCity(), textSize, LEFT);
+        mPrintUnicodeText("Price :₹" + tempPrice, textSize, LEFT);
+        mPrintUnicodeText("Advnc :₹" + tempAdvance, textSize, LEFT);
+        mPrintUnicodeText("Bal :₹" + tempBalance, 34, LEFT);
+        mPrintUnicodeText("Text  :" + salesData.getComments(), textSize, LEFT);
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+        mPrintUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", 22, CENTER);
+        mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        mPrintUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", 22, CENTER);
+        mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.resetPrinter();
     }
 
-    private SellModel getSalesTransaction() {
-        String settled = "false";
-        SimpleDateFormat datetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        if (UHelper.parseDouble(balance.getText().toString()) == 0)
-            settled = "true";
-        String modelname = "";
-        String locationname = "";
-
-        if (modelNameSpinner.getSelectedItemPosition() > 0)
-            modelname = modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
-
-        if (locationSpinner.getSelectedItemPosition() > 0)
-            locationname = locationList.get(locationSpinner.getSelectedItemPosition() - 1).getGuid();
-
-
-        return new SellModel(receiptNo.getText().toString(),
-                datetime.format(new Date().getTime()),
-                name.getText().toString().toLowerCase(),
-                mobile.getText().toString(),
-                city.getText().toString(),
-                comments.getText().toString(),
-                price.getText().toString(),
-                advance.getText().toString(),
-                balance.getText().toString(),
-                // modelNameSpinner.getSelectedItem().toString(),
-                modelname,
-                locationname,
-                settled);
-
-    }
-
-    private void receiptno() {
-        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
-        showProgressBar(true);
-        rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-//test data
-                showProgressBar(false);
-                int currentValue = 0;
-                String value;
-                try {
-                    value = dataSnapshot.getValue().toString();
-                } catch (Exception e) {
-                    value = null;
-                }
-
-                if (value == null) {
-                    receiptNo.setText(String.format("%04d", 1));
-                } else {
-                    currentValue = Integer.parseInt(value);
-                    receiptNo.setText(String.format("%04d", currentValue + 1));
-                }
-                if (increse) {
-                    rcptno.setValue(String.format("%04d", currentValue + 1));
-                    receiptNo.setText(String.format("%04d", currentValue + 2));
-                    increse = false;
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(SellActivity.this, "Error with firebase :" + databaseError, Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
-    private void showProgressBar(final boolean visibility) {
-
-        runOnUiThread(new Runnable() {
-            public void run() {
-                if (visibility)
-                    showpDialog();
-                else hidepDialog();
-            }
-        });
-    }
-
-    private void showpDialog() {
-        if (!pDialog.isShowing())
-            pDialog.show();
-    }
-
-    private void hidepDialog() {
-        if (pDialog.isShowing())
-            pDialog.dismiss();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        // check if the request code is same as what is passed  here it is 2
-        System.out.println(requestCode + "*" + resultCode + "*" + data);
-        if (resultCode == 0) {
-            pdWorkInProgress.cancel();
-            toast("Bluetooth access denied");
-            chechFinish();
-        } else if (resultCode == -1) {
-            pdWorkInProgress.cancel();
-            mPrinter.connectToPrinter("D8:80:39:F8:37:A5");
+    private void mPrintUnicodeText(String text, int size, int almnt) {
+        Layout.Alignment alignment = null;
+        switch (almnt) {
+            case 0:
+                alignment = Layout.Alignment.ALIGN_CENTER;
+                break;
+            case 1:
+                alignment = Layout.Alignment.ALIGN_NORMAL;
+                break;
+            case -1:
+                alignment = Layout.Alignment.ALIGN_OPPOSITE;
+                break;
         }
+        Typeface font = Typeface.createFromAsset(getAssets(), "fonts/Cousine-Regular.ttf");
+        TextPaint textPaint = new TextPaint();
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(size);
+        textPaint.setTypeface(font);
+        mPrinter.printUnicodeText(text, alignment, textPaint);
     }
 
     @Override
@@ -515,18 +582,16 @@ public class SellActivity extends AppCompatActivity {
         mPrinter.onActivityRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-
     private final BroadcastReceiver ReceiptPrinterMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             DebugLog.logTrace("Printer Message Received");
             Bundle b = intent.getExtras();
-
             switch (b.getInt(RECEIPT_PRINTER_STATUS)) {
                 case RECEIPT_PRINTER_CONN_STATE_NONE:
                     toast(R.string.printer_not_conn);
                     pdWorkInProgress.cancel();
-                    chechFinish();
+                    checkFinish();
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_LISTEN:
                     toast(R.string.ready_for_conn);
@@ -544,7 +609,7 @@ public class SellActivity extends AppCompatActivity {
                     String n = b.getString(RECEIPT_PRINTER_MSG);
                     toast(n);
                     pdWorkInProgress.cancel();
-                    chechFinish();
+                    checkFinish();
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_MSG:
                     String m = b.getString(RECEIPT_PRINTER_MSG);
@@ -553,12 +618,12 @@ public class SellActivity extends AppCompatActivity {
                 case RECEIPT_PRINTER_NOT_CONNECTED:
                     toast("Status : Printer Not Connected");
                     pdWorkInProgress.cancel();
-                    chechFinish();
+                    checkFinish();
                     break;
                 case RECEIPT_PRINTER_NOT_FOUND:
                     toast("Status : Printer Not Found");
                     pdWorkInProgress.cancel();
-                    chechFinish();
+                    checkFinish();
                     break;
                 case RECEIPT_PRINTER_SAVED:
                     toast(R.string.printer_saved);
@@ -566,33 +631,6 @@ public class SellActivity extends AppCompatActivity {
             }
         }
     };
-
-    private void chechFinish() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        builder.setTitle("Printing Issue");
-        builder.setMessage("Continue without printer?");
-
-        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-
-        });
-
-        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                finish();
-            }
-        });
-
-        AlertDialog alert = builder.create();
-        alert.show();
-    }
 
     @Override
     protected void onResume() {
@@ -641,28 +679,111 @@ public class SellActivity extends AppCompatActivity {
         }
     }
 
-    void toast(int message) {
-        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
-    }
-
-    void toast(String message) {
-        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
-    }
-
     private void connectPrinter() {
-        pdWorkInProgress.setIndeterminate(true);
-        pdWorkInProgress.setMessage("Connecting to printer ...");
-        pdWorkInProgress.setCancelable(false); // disable dismiss by tapping outside of the dialog
-        pdWorkInProgress.show();
-        try {
-            mPrinter.initService(SellActivity.this);
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        if (!isBluetoothEnabled()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            builder.setTitle("Bluetooth is Off");
+            builder.setMessage("Do you want to switch on Bluetooth");
+
+            builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                }
+
+            });
+
+            builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    toast("Printing not possible");
+                    continueWithoutPrint = true;
+                }
+            });
+
+            AlertDialog alert = builder.create();
+            alert.show();
+
+        } else {
+            connect();
         }
-        mPrinter.connectToPrinter("D8:80:39:F8:37:A5");
     }
 
-    private Bitmap combineImageIntoOneFlexWidth(ArrayList<Bitmap> bitmap) {
+    void connect() {
+        {
+            if (!continueWithoutPrint) {
+                pdWorkInProgress.setIndeterminate(true);
+                pdWorkInProgress.setMessage("Connecting to printer ...");
+                pdWorkInProgress.setCancelable(false); // disable dismiss by tapping outside of the dialog
+                pdWorkInProgress.show();
+                try {
+                    mPrinter.initService(SellActivity.this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                mPrinter.connectToPrinter("D8:80:39:F8:37:A5");
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // check if the request code is same as what is passed  here it is 2
+        System.out.println(requestCode + "*" + resultCode + "*" + data);
+
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                if (resultCode == Activity.RESULT_OK) {
+                    pdWorkInProgress.cancel();
+                    connect();
+                } else {
+                    // User did not enable Bluetooth or an error occurred
+                    pdWorkInProgress.cancel();
+                    toast("Bluetooth not switched on");
+                    checkFinish();
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
+    }
+
+    private void checkFinish() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Printing Issue");
+        builder.setMessage("Continue without printer?");
+
+        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                continueWithoutPrint = true;
+                dialog.dismiss();
+            }
+
+        });
+
+        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                finish();
+            }
+        });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+/*    private Bitmap combineImageIntoOneFlexWidth(ArrayList<Bitmap> bitmap) {
         int w = 0, h = 0;
         for (int i = 0; i < bitmap.size(); i++) {
             if (i < bitmap.size() - 1) {
@@ -682,6 +803,28 @@ public class SellActivity extends AppCompatActivity {
             canvas.drawBitmap(bitmap.get(i), top, 0f, null);
         }
         return temp;
+    }*/
+
+    private boolean isBluetoothEnabled() {
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Device does not support bluetooth", Toast.LENGTH_LONG).show();
+            return false;
+        } else {
+            if (!mBluetoothAdapter.isEnabled()) {
+                Toast.makeText(this, "Switch on Bluetooth to use printer", Toast.LENGTH_LONG).show();
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    void toast(int message) {
+        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
+    }
+
+    void toast(String message) {
+        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
     }
 
 }

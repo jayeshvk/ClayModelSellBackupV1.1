@@ -67,24 +67,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buttonSell(View view) {
-        if (isBluetoothEnabled())
-            startActivity(new Intent(MainActivity.this, SellActivity.class));
+        startActivity(new Intent(MainActivity.this, SellActivity.class));
     }
 
-    private boolean isBluetoothEnabled() {
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(this, "Device does not support bluetooth", Toast.LENGTH_LONG).show();
-            return false;
-        } else {
-            if (!mBluetoothAdapter.isEnabled()) {
-                Toast.makeText(this, "Switch on Bluetooth to use printer", Toast.LENGTH_LONG).show();
-                return false;
-            } else {
-                return true;
-            }
-        }
-    }
 
     public void buttonDeliver(View view) {
         startActivity(new Intent(MainActivity.this, Deliver.class));
