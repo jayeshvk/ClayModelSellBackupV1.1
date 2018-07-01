@@ -10,19 +10,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.TextPaint;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -34,8 +32,6 @@ import android.widget.Toast;
 
 import com.cie.btp.CieBluetoothPrinter;
 import com.cie.btp.DebugLog;
-import com.cie.btp.FontStyle;
-import com.cie.btp.FontType;
 import com.cie.btp.PrinterWidth;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -71,7 +67,8 @@ public class SellActivity extends AppCompatActivity {
     private DatabaseReference refYear;
     private FirebaseAuth mAuth;
     private FirebaseUser user;
-    private boolean increse;
+    private boolean increse, flag;
+    private int rno;
 
     TextView receiptNo;
     EditText name;
@@ -138,7 +135,6 @@ public class SellActivity extends AppCompatActivity {
         refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
         refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
         refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
-        checkLockUpdate();
         connectPrinter();
 
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
@@ -256,36 +252,73 @@ public class SellActivity extends AppCompatActivity {
 
     }
 
-    private void checkLockUpdate() {
+
+    public void checkReceiptNo() {
+        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
         showProgressBar(true);
-        lockStat.addListenerForSingleValueEvent(new ValueEventListener() {
+        rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                System.out.println(" ***" + dataSnapshot.getValue());
                 showProgressBar(false);
-                if (dataSnapshot.getValue().toString().contains("true")) {
-                    toast("Some one else already in transaction from another mobile!");
-                    finish();
+                int currentValue = 0;
+                String value;
+                try {
+                    value = dataSnapshot.getValue().toString();
+                } catch (Exception e) {
+                    value = null;
+                }
+                if (value == null) {
+                    receiptNo.setText(String.format("%04d", 1));
+                    saveTransaction();
                 } else {
-                    lockStat.setValue("true");
+                    currentValue = Integer.parseInt(value);
+                    receiptNo.setText(String.format("%04d", currentValue + 1));
+                    saveTransaction();
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                toast("Unable to reach to server try again");
+                showProgressBar(false);
+                toast("Error with firebase :" + databaseError);
+                toast("Please try again later !");
             }
         });
     }
 
     public void buttonSave(View view) {
-
         //Validate and collect all data
         if (name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)
             Toast.makeText(SellActivity.this, "Please enter all details", Toast.LENGTH_SHORT).show();
         else {
-            //set lock entry
-            saveTransaction();
+            showProgressBar(true);
+            lockStat.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    showProgressBar(false);
+                    String value;
+                    try {
+                        value = dataSnapshot.getValue().toString();
+                    } catch (Exception e) {
+                        value = null;
+                    }
+                    if (value == null) {
+                        lockStat.setValue(Boolean.TRUE);
+                        checkReceiptNo();
+                    } else if (dataSnapshot.getValue().toString().contains("true")) {
+                        toast("Some one else already in transaction from another mobile! Try again");
+                    } else {
+                        lockStat.setValue(Boolean.TRUE);
+                        checkReceiptNo();
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    showProgressBar(false);
+                    toast("Unable to reach to server try again");
+                }
+            });
         }
     }
 
@@ -304,7 +337,9 @@ public class SellActivity extends AppCompatActivity {
                     Toast.makeText(SellActivity.this, "Error saving, try again!", Toast.LENGTH_LONG).show();
                 }
                 if (databaseReference != null) {
-                    Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
+                    final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
+                    rcptno.setValue(receiptNo.getText().toString());
+                    lockStat.setValue(Boolean.FALSE);
                     tempPrice = price.getText().toString();
                     tempAdvance = advance.getText().toString();
                     tempBalance = balance.getText().toString();
@@ -323,7 +358,7 @@ public class SellActivity extends AppCompatActivity {
                         printReceipt();
                     }
                     //generate next receipt number
-                    receiptno();
+                    //receiptno();
                     name.setText(null);
                     name.requestFocus();
                     price.setText(null);
@@ -334,6 +369,8 @@ public class SellActivity extends AppCompatActivity {
                     advance.setText(null);
                     modelNameSpinner.setSelection(0);
                     locationSpinner.setSelection(0);
+
+                    Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
 
                 }
             }
@@ -394,42 +431,7 @@ public class SellActivity extends AppCompatActivity {
     }
 
     private void receiptno() {
-        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
-        showProgressBar(true);
-        rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                showProgressBar(false);
-                int currentValue = 0;
-                String value;
-                try {
-                    value = dataSnapshot.getValue().toString();
-                } catch (Exception e) {
-                    value = null;
-                }
 
-                if (value == null) {
-                    receiptNo.setText(String.format("%04d", 1));
-                } else {
-                    currentValue = Integer.parseInt(value);
-                    receiptNo.setText(String.format("%04d", currentValue + 1));
-                }
-                if (increse) {
-                    rcptno.setValue(String.format("%04d", currentValue + 1));
-                    receiptNo.setText(String.format("%04d", currentValue + 2));
-                    increse = false;
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                showProgressBar(false);
-                toast("Error with firebase :" + databaseError);
-                toast("Please try again later !");
-                finish();
-
-            }
-        });
     }
 
 /*    private void printReceipt() {
@@ -669,7 +671,6 @@ public class SellActivity extends AppCompatActivity {
     protected void onResume() {
         DebugLog.logTrace();
         mPrinter.onActivityResume();
-        checkLockUpdate();
         super.onResume();
     }
 
@@ -696,7 +697,6 @@ public class SellActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        checkLockUpdate();
         super.onStart();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(RECEIPT_PRINTER_MESSAGES);
