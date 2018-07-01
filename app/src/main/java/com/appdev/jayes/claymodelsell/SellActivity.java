@@ -67,8 +67,6 @@ public class SellActivity extends AppCompatActivity {
     private DatabaseReference refYear;
     private FirebaseAuth mAuth;
     private FirebaseUser user;
-    private boolean increse, flag;
-    private int rno;
 
     TextView receiptNo;
     EditText name;
@@ -122,6 +120,7 @@ public class SellActivity extends AppCompatActivity {
         pDialog = new ProgressDialog(this);
         pDialog.setMessage("Please wait...");
         pDialog.setCancelable(false);
+        pDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 
         //printer relevant
         pdWorkInProgress = new ProgressDialog(this);
@@ -345,7 +344,6 @@ public class SellActivity extends AppCompatActivity {
                     tempBalance = balance.getText().toString();
                     tempModelName = modelNameSpinner.getSelectedItem().toString();
                     //on successfull save print 2 copies
-                    increse = true;
                     if (!continueWithoutPrint) {
                         printReceipt();
                         synchronized (this) {
@@ -357,8 +355,6 @@ public class SellActivity extends AppCompatActivity {
                         }
                         printReceipt();
                     }
-                    //generate next receipt number
-                    //receiptno();
                     name.setText(null);
                     name.requestFocus();
                     price.setText(null);
