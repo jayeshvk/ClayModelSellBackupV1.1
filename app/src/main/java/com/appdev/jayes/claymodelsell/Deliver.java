@@ -170,8 +170,6 @@ public class Deliver extends AppCompatActivity {
                     System.out.println("The read failed: " + databaseError.getCode());
                 }
             });
-
-
         }
     }
 
@@ -296,7 +294,7 @@ public class Deliver extends AppCompatActivity {
                 if (position == 0) {
 
                 } else {
-                    price.setText(modelList.get(position - 1).getModelPrice());
+                    //price.setText(modelList.get(position - 1).getModelPrice());
                 }
             }
 
@@ -330,8 +328,6 @@ public class Deliver extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-
                 Double bal = UHelper.parseDouble(price.getText().toString()) - UHelper.parseDouble(s.toString());
                 balance.setText(bal.toString());
             }

@@ -98,6 +98,7 @@ public class SellActivity extends AppCompatActivity {
     private static final int RIGHT = -1;
     private static final int CENTER = 0;
     private String tempPrice, tempAdvance, tempBalance, tempModelName;
+    private DatabaseReference lockStat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +108,7 @@ public class SellActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
+
 
         receiptNo = (TextView) findViewById(R.id.receiptNo);
         name = (EditText) findViewById(R.id.name);
@@ -127,15 +129,17 @@ public class SellActivity extends AppCompatActivity {
         //printer relevant
         pdWorkInProgress = new ProgressDialog(this);
         pdWorkInProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        connectPrinter();
+
 
         modelList = new ArrayList<>();
         locationList = new ArrayList<>();
 
+        lockStat = refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/lock");
         refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
         refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
         refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
-
+        checkLockUpdate();
+        connectPrinter();
 
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
         modelNameSpinner = (Spinner) findViewById(R.id.modelNameSpinner);
@@ -252,63 +256,89 @@ public class SellActivity extends AppCompatActivity {
 
     }
 
+    private void checkLockUpdate() {
+        showProgressBar(true);
+        lockStat.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println(" ***" + dataSnapshot.getValue());
+                showProgressBar(false);
+                if (dataSnapshot.getValue().toString().contains("true")) {
+                    toast("Some one else already in transaction from another mobile!");
+                    finish();
+                } else {
+                    lockStat.setValue("true");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                toast("Unable to reach to server try again");
+            }
+        });
+    }
+
     public void buttonSave(View view) {
 
         //Validate and collect all data
         if (name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)
             Toast.makeText(SellActivity.this, "Please enter all details", Toast.LENGTH_SHORT).show();
         else {
-
-            //save to database
-            DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
-                    "users/" +
-                            user.getUid() +
-                            "/sales/" +
-                            UHelper.getTime("y") + "/");
-            refSale.push().setValue(getSalesTransaction(), new DatabaseReference.CompletionListener() {
-                @Override
-                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-
-                    if (databaseError != null) {
-                        Toast.makeText(SellActivity.this, "Error saving, try again!", Toast.LENGTH_LONG).show();
-                    }
-                    if (databaseReference != null) {
-                        Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
-                        tempPrice = price.getText().toString();
-                        tempAdvance = advance.getText().toString();
-                        tempBalance = balance.getText().toString();
-                        tempModelName = modelNameSpinner.getSelectedItem().toString();
-                        //on successfull save print 2 copies
-                        increse = true;
-                        if (!continueWithoutPrint) {
-                            printReceipt();
-                            synchronized (this) {
-                                try {
-                                    wait(3000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            printReceipt();
-                        }
-                        //generate next receipt number
-                        receiptno();
-                        name.setText(null);
-                        name.requestFocus();
-                        price.setText(null);
-                        mobile.setText(null);
-                        city.setText(null);
-                        comments.setText(null);
-                        balance.setText(null);
-                        advance.setText(null);
-                        modelNameSpinner.setSelection(0);
-                        locationSpinner.setSelection(0);
-
-                    }
-                }
-            });
-
+            //set lock entry
+            saveTransaction();
         }
+    }
+
+    private void saveTransaction() {
+        //save to database
+        DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
+                "users/" +
+                        user.getUid() +
+                        "/sales/" +
+                        UHelper.getTime("y") + "/");
+        refSale.push().setValue(getSalesTransaction(), new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+
+                if (databaseError != null) {
+                    Toast.makeText(SellActivity.this, "Error saving, try again!", Toast.LENGTH_LONG).show();
+                }
+                if (databaseReference != null) {
+                    Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
+                    tempPrice = price.getText().toString();
+                    tempAdvance = advance.getText().toString();
+                    tempBalance = balance.getText().toString();
+                    tempModelName = modelNameSpinner.getSelectedItem().toString();
+                    //on successfull save print 2 copies
+                    increse = true;
+                    if (!continueWithoutPrint) {
+                        printReceipt();
+                        synchronized (this) {
+                            try {
+                                wait(3000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        printReceipt();
+                    }
+                    //generate next receipt number
+                    receiptno();
+                    name.setText(null);
+                    name.requestFocus();
+                    price.setText(null);
+                    mobile.setText(null);
+                    city.setText(null);
+                    comments.setText(null);
+                    balance.setText(null);
+                    advance.setText(null);
+                    modelNameSpinner.setSelection(0);
+                    locationSpinner.setSelection(0);
+
+                }
+            }
+        });
+
     }
 
     private SellModel getSalesTransaction() {
@@ -369,7 +399,6 @@ public class SellActivity extends AppCompatActivity {
         rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-//test data
                 showProgressBar(false);
                 int currentValue = 0;
                 String value;
@@ -394,7 +423,11 @@ public class SellActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(SellActivity.this, "Error with firebase :" + databaseError, Toast.LENGTH_LONG).show();
+                showProgressBar(false);
+                toast("Error with firebase :" + databaseError);
+                toast("Please try again later !");
+                finish();
+
             }
         });
     }
@@ -636,6 +669,7 @@ public class SellActivity extends AppCompatActivity {
     protected void onResume() {
         DebugLog.logTrace();
         mPrinter.onActivityResume();
+        checkLockUpdate();
         super.onResume();
     }
 
@@ -662,6 +696,7 @@ public class SellActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
+        checkLockUpdate();
         super.onStart();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(RECEIPT_PRINTER_MESSAGES);

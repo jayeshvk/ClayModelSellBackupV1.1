@@ -19,18 +19,13 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.Layout;
 import android.text.TextPaint;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,9 +33,6 @@ import com.cie.btp.CieBluetoothPrinter;
 import com.cie.btp.DebugLog;
 import com.cie.btp.PrintDensity;
 import com.cie.btp.PrinterWidth;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 
@@ -52,7 +44,6 @@ import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_LISTEN;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_STATE_NONE;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_MESSAGES;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_MSG;
-import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NAME;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOTIFICATION_ERROR_MSG;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOTIFICATION_MSG;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOT_CONNECTED;
@@ -75,6 +66,7 @@ public class Settings extends AppCompatActivity {
     private static final int CENTER = 0;
     String tempFrom, tempTo, tempDiff, tempIdentifier;
     boolean checked, disconnect;
+    int tempRepeat, miliSeconds;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +99,9 @@ public class Settings extends AppCompatActivity {
         final EditText from = (EditText) promptView.findViewById(R.id.from);
         final EditText to = (EditText) promptView.findViewById(R.id.to);
         final EditText identifier = (EditText) promptView.findViewById(R.id.identifier);
+        final EditText pausetime = (EditText) promptView.findViewById(R.id.pauseTime);
         final CheckBox checkBox = (CheckBox) promptView.findViewById(R.id.checkBox);
+        final CheckBox printMultiple = (CheckBox) promptView.findViewById(R.id.printMultiple);
 
         alertDialogBuilder
                 .setPositiveButton("Print", new DialogInterface.OnClickListener() {
@@ -116,10 +110,19 @@ public class Settings extends AppCompatActivity {
                         tempTo = to.getText().toString();
                         tempIdentifier = identifier.getText().toString();
                         checked = checkBox.isChecked();
+                        int pt = UHelper.parseInt(pausetime.getText().toString());
+                        if (pt > 5) {
+                            miliSeconds = 5000;
+                        } else
+                            miliSeconds = pt * 1000;
+                        if (printMultiple.isChecked())
+                            tempRepeat = 2;
+                        else tempRepeat = 1;
+
                         int f = UHelper.parseInt(tempFrom);
                         int t = UHelper.parseInt(tempTo);
                         int b = t - f;
-                        if (b <= 0)
+                        if (b < 0)
                             toast("Please enter correct data");
                         else
                             connectPrinter();
@@ -326,15 +329,13 @@ public class Settings extends AppCompatActivity {
         mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
         mPrinter.setAlignmentCenter();
         int textSize = 32;
+        int pixellineFeed = 150;
         mPrinter.setPrintDensity(PrintDensity.FADE);
         //Print logo
         Bitmap logo = BitmapFactory.decodeResource(getResources(), R.mipmap.logo);
         mPrinter.printGrayScaleImage(logo, 1);
         mPrinter.setPrintDensity(PrintDensity.NORMAL);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        /*mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
 
         //Print receipt number
         Typeface custom_font = Typeface.createFromAsset(getAssets(), "fonts/ErasBoldITC.ttf");
@@ -349,25 +350,29 @@ public class Settings extends AppCompatActivity {
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         mPrintUnicodeText("Dt:____________", textSize, RIGHT);
         mPrintUnicodeText("Name :", textSize, LEFT);
+        mPrinter.printLineFeed();
         mPrintUnicodeText("Mob  :", textSize, LEFT);
+        mPrinter.printLineFeed();
         mPrintUnicodeText("Model: ", textSize, LEFT);
+        mPrinter.printLineFeed();
         mPrintUnicodeText("City :", textSize, LEFT);
-        mPrintUnicodeText("Price:₹", textSize, LEFT);
-        mPrintUnicodeText("Advnc:₹", textSize, LEFT);
+        //mPrintUnicodeText("Price:₹", textSize, LEFT);
+        //mPrintUnicodeText("Advnc:₹", textSize, LEFT);
         mPrintUnicodeText("Bal  :₹", textSize, LEFT);
-        mPrintUnicodeText("Text :", textSize, LEFT);
+        mPrinter.printLineFeed();
+        //mPrintUnicodeText("Text :", textSize, LEFT);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
         mPrintUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         mPrintUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", 22, CENTER);
         mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
-        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);*/
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
 
         mPrinter.printLineFeed();
         mPrinter.printLineFeed();
-/*        mPrinter.printLineFeed();
         mPrinter.printLineFeed();
-        mPrinter.printLineFeed();*/
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
         mPrinter.resetPrinter();
     }
 
@@ -442,13 +447,29 @@ public class Settings extends AppCompatActivity {
             int t = UHelper.parseInt(tempTo);
             int b = t - f;
 
+            if (t == 0)
+                b = 1;
+            else if (b == 0)
+                b = 1;
+
             for (int i = 0; i < b; i++) {
                 String receiptno = tempIdentifier + UHelper.intLeadingZero(3, f + i);
-                print(receiptno);
+                for (int j = 0; j < tempRepeat; j++) {
+                    print(receiptno);
+                    if (checked) {
+                        try {
+                            Thread.currentThread();
+                            Thread.sleep(miliSeconds);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
                 if (checked) {
                     try {
                         Thread.currentThread();
-                        Thread.sleep(3000);
+                        Thread.sleep(miliSeconds);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

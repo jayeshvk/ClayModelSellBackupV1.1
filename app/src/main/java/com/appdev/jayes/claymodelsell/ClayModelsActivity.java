@@ -106,13 +106,11 @@ public class ClayModelsActivity extends AppCompatActivity {
     }
 
     private void modifyData(final ClayModel modelData, final int position) {
-        modelName.setText(modelData.getModelName());
-        modelPrice.setText(modelData.getModelPrice());
         LayoutInflater layoutInflater = getLayoutInflater();
         View v = layoutInflater.inflate(R.layout.modifymodel, null);
 
-        final EditText etmodelName = (EditText) v.findViewById(R.id.modelName);
-        final EditText etmodelPrice = (EditText) v.findViewById(R.id.modelPrice);
+        final EditText etmodelName = (EditText) v.findViewById(R.id.mdName);
+        final EditText etmodelPrice = (EditText) v.findViewById(R.id.mdPrice);
         etmodelName.setText(modelData.getModelName());
         etmodelPrice.setText(modelData.getModelPrice());
 

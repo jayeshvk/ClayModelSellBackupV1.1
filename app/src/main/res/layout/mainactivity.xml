@@ -11,12 +11,12 @@
     android:theme="@android:style/Theme.NoTitleBar">
 
     <Button
-        android:key="@+id/sell"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:key="@+id/sell"
         android:onClick="buttonSell"
-        android:text="sell" />
+        android:text="Sell" />
 
     <Button
         android:key="@+id/deliver"
