@@ -16,6 +16,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth.AuthStateListener authStateListener;
@@ -24,9 +29,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainactivity);
-        //FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-        DatabaseReference root = FirebaseDatabase.getInstance().getReference("users");
-        root.keepSynced(true);
 
     }
 
@@ -63,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("CDA", "onBackPressed Called");
         moveTaskToBack(true);
         android.os.Process.killProcess(android.os.Process.myPid());
-        System.exit(1);
+        System.exit(0);
     }
 
     public void buttonSell(View view) {
@@ -74,4 +76,16 @@ public class MainActivity extends AppCompatActivity {
     public void buttonDeliver(View view) {
         startActivity(new Intent(MainActivity.this, Deliver.class));
     }
+
+/*    public static boolean isHostAvailable(final String host, final int port, final int timeout) {
+        try (final Socket socket = new Socket()) {
+            final InetAddress inetAddress = InetAddress.getByName(host);
+            final InetSocketAddress inetSocketAddress = new InetSocketAddress(inetAddress, port);
+            socket.connect(inetSocketAddress, timeout);
+            return true;
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }*/
 }

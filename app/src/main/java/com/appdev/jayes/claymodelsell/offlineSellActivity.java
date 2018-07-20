@@ -21,7 +21,6 @@ import android.text.Editable;
 import android.text.Layout;
 import android.text.TextPaint;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -40,8 +39,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
@@ -63,7 +60,7 @@ import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_NOT_FOUND;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_SAVED;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_STATUS;
 
-public class SellActivity extends AppCompatActivity {
+public class offlineSellActivity extends AppCompatActivity {
 
     private DatabaseReference refLocation;
     private DatabaseReference refModelName;
@@ -71,7 +68,7 @@ public class SellActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseUser user;
 
-    TextView receiptNo;
+    EditText receiptNo;
     EditText name;
     EditText mobile;
     EditText city;
@@ -97,19 +94,18 @@ public class SellActivity extends AppCompatActivity {
     private static final int CENTER = 0;
     private String tempPrice, tempAdvance, tempBalance, tempModelName;
     private DatabaseReference lockStat;
-    private DatabaseReference lock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sell);
+        setContentView(R.layout.offline_activity_sell);
 
 
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
 
 
-        receiptNo = (TextView) findViewById(R.id.receiptNo);
+        receiptNo = (EditText) findViewById(R.id.receiptNo);
         name = (EditText) findViewById(R.id.name);
         mobile = (EditText) findViewById(R.id.mobile);
         city = (EditText) findViewById(R.id.city);
@@ -134,10 +130,10 @@ public class SellActivity extends AppCompatActivity {
         modelList = new ArrayList<>();
         locationList = new ArrayList<>();
 
-        lockStat = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/lock");
-        refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
-        refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
-        //refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
+        lockStat = refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/lock");
+        //refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
+        //refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
+        refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
         connectPrinter();
 
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
@@ -157,10 +153,7 @@ public class SellActivity extends AppCompatActivity {
         modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelNameSpinner.setAdapter(modelAdapter);
 
-        //get Receipt number
-        receiptno();
-
-        showProgressBar(true);
+/*        showProgressBar(true);
         refLocation.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -196,7 +189,7 @@ public class SellActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) {
                 System.out.println("The read failed: " + databaseError.getCode());
             }
-        });
+        });*/
 
         modelNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -264,13 +257,19 @@ public class SellActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 showProgressBar(false);
                 int currentValue = 0;
-                if (!dataSnapshot.exists()) {
+                String value;
+                try {
+                    value = dataSnapshot.getValue().toString();
+                } catch (Exception e) {
+                    value = null;
+                }
+                if (value == null) {
                     receiptNo.setText(String.format("%04d", 1));
                     saveTransaction();
                 } else {
-                    currentValue = UHelper.parseInt(dataSnapshot.getValue().toString());
+                    currentValue = Integer.parseInt(value);
                     receiptNo.setText(String.format("%04d", currentValue + 1));
-                    saveTransaction();
+
                 }
             }
 
@@ -286,41 +285,14 @@ public class SellActivity extends AppCompatActivity {
     public void buttonSave(View view) {
         //Validate and collect all data
         if (name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)
-            Toast.makeText(SellActivity.this, "Please enter all details", Toast.LENGTH_SHORT).show();
+            Toast.makeText(offlineSellActivity.this, "Please enter all details", Toast.LENGTH_SHORT).show();
         else {
-            showProgressBar(true);
-            lockStat.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    showProgressBar(false);
-                    String value;
-                    try {
-                        value = dataSnapshot.getValue().toString();
-                    } catch (Exception e) {
-                        value = null;
-                    }
-                    if (value == null) {
-                        lockStat.setValue(Boolean.TRUE);
-                        checkReceiptNo();
-                    } else if (dataSnapshot.getValue().toString().contains("true")) {
-                        toast("Some one else already in transaction from another mobile! Try again");
-                    } else {
-                        lockStat.setValue(Boolean.TRUE);
-                        checkReceiptNo();
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    showProgressBar(false);
-                    toast("Unable to reach to server try again");
-                }
-            });
+            if (receiptNo.getText().toString().trim().length() != 0)
+                saveTransaction();
         }
     }
 
     private void saveTransaction() {
-        onStarClicked();
         //save to database
         DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
                 "users/" +
@@ -332,12 +304,11 @@ public class SellActivity extends AppCompatActivity {
             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 
                 if (databaseError != null) {
-                    Toast.makeText(SellActivity.this, "Error saving, try again!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(offlineSellActivity.this, "Error saving, try again!", Toast.LENGTH_LONG).show();
                 }
                 if (databaseReference != null) {
-                    final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
-                    rcptno.setValue(receiptNo.getText().toString());
-                    lockStat.setValue(Boolean.FALSE);
+                    //final DatabaseReference Offrcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
+                    //rcptno.setValue(receiptNo.getText().toString());
                     tempPrice = price.getText().toString();
                     tempAdvance = advance.getText().toString();
                     tempBalance = balance.getText().toString();
@@ -365,7 +336,7 @@ public class SellActivity extends AppCompatActivity {
                     modelNameSpinner.setSelection(0);
                     locationSpinner.setSelection(0);
 
-                    Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
+                    Toast.makeText(offlineSellActivity.this, "Saved", Toast.LENGTH_LONG).show();
 
                 }
             }
@@ -424,117 +395,6 @@ public class SellActivity extends AppCompatActivity {
         if (pDialog.isShowing())
             pDialog.dismiss();
     }
-
-    private void receiptno() {
-
-    }
-
-/*    private void printReceipt() {
-
-        ArrayList<Bitmap> bmps = new ArrayList<Bitmap>();
-
-        for (int i = 0; i < receiptNo.getText().toString().length(); i++) {
-            char number = receiptNo.getText().toString().charAt(i);
-            Bitmap bmp = null;
-            switch (number) {
-                case '0':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.zero);
-                    bmps.add(bmp);
-                    break;
-                case '1':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.one);
-                    bmps.add(bmp);
-                    break;
-                case '2':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.two);
-                    bmps.add(bmp);
-                    break;
-                case '3':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.three);
-                    bmps.add(bmp);
-                    break;
-                case '4':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.four);
-                    bmps.add(bmp);
-                    break;
-                case '5':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.five);
-                    bmps.add(bmp);
-                    break;
-                case '6':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.six);
-                    bmps.add(bmp);
-                    break;
-                case '7':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.seven);
-                    bmps.add(bmp);
-                    break;
-                case '8':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.eight);
-                    bmps.add(bmp);
-                    break;
-                case '9':
-                    bmp = BitmapFactory.decodeResource(getResources(), R.mipmap.nine);
-                    bmps.add(bmp);
-                    break;
-            }
-        }
-        TextPaint mDefaultTextPaint = new TextPaint();
-
-        Bitmap bmpFinal = combineImageIntoOneFlexWidth(bmps);
-        Bitmap logo = BitmapFactory.decodeResource(getResources(), R.mipmap.logo);
-        mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
-        mPrinter.setAlignmentCenter();
-
-        //mPrinter.setLineSpacing(0);
-        //logo
-        mPrinter.printGrayScaleImage(logo, 1);
-
-        //mPrinter.setLineSpacing(0);
-        mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        //mPrinter.setLineSpacing(0);
-
-        //receipt no in big letters
-        mPrinter.printGrayScaleImage(bmpFinal, 1);
-
-        //mPrinter.setLineSpacing(0);
-        mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mDefaultTextPaint.setColor(Color.BLACK);
-        mDefaultTextPaint.setTextSize(22);
-        mPrinter.printUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", Layout.Alignment.ALIGN_CENTER, mDefaultTextPaint);
-        mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mPrinter.setAlignmentLeft();
-        mPrinter.printTextLine("Dt:" + UHelper.setPresentDateddMMyyyy() + "\n");
-        mPrinter.printTextLine("Name    :" + name.getText().toString() + "\n");
-        mPrinter.printTextLine("Mob     :" + mobile.getText().toString() + "\n");
-        mDefaultTextPaint.setColor(Color.BLACK);
-        mDefaultTextPaint.setTextSize(28);
-        mPrinter.printUnicodeText("Model   :" + modelNameSpinner.getSelectedItem(), Layout.Alignment.ALIGN_NORMAL, mDefaultTextPaint);
-        mPrinter.printTextLine("City    :" + city.getText().toString() + "\n");
-        mPrinter.printTextLine("Price   :₹" + price.getText().toString() + "\n");
-        mPrinter.printTextLine("Advance :₹" + advance.getText().toString() + "\n");
-        mPrinter.setFontStyle(true, false, FontStyle.DOUBLE_WIDTH_HEIGHT, FontType.FONT_A);
-        mPrinter.printTextLine("Bal :₹" + balance.getText().toString() + "\n");
-        mPrinter.setFontStyle(false, false, FontStyle.NORMAL, FontType.FONT_A);
-        mPrinter.printTextLine("Comm    :" + comments.getText().toString() + "\n");
-        mPrinter.printTextLine("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mDefaultTextPaint.setColor(Color.BLACK);
-        mDefaultTextPaint.setTextSize(20);
-        mPrinter.printUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", Layout.Alignment.ALIGN_CENTER, mDefaultTextPaint);
-        mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mDefaultTextPaint.setColor(Color.BLACK);
-        mDefaultTextPaint.setTextSize(20);
-        mPrinter.printUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", Layout.Alignment.ALIGN_CENTER, mDefaultTextPaint);
-        mPrinter.printTextLine("9448629160/9916278538/9141646176\n");
-        mPrinter.printTextLine("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mPrinter.printLineFeed();
-        mPrinter.printLineFeed();
-        mPrinter.printLineFeed();
-        mPrinter.printLineFeed();
-        mPrinter.printLineFeed();
-        mPrinter.resetPrinter();
-
-    }*/
 
     private void printReceipt() {
         mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
@@ -751,7 +611,7 @@ public class SellActivity extends AppCompatActivity {
                 pdWorkInProgress.setCancelable(false); // disable dismiss by tapping outside of the dialog
                 pdWorkInProgress.show();
                 try {
-                    mPrinter.initService(SellActivity.this);
+                    mPrinter.initService(offlineSellActivity.this);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -813,28 +673,6 @@ public class SellActivity extends AppCompatActivity {
         alert.show();
     }
 
-/*    private Bitmap combineImageIntoOneFlexWidth(ArrayList<Bitmap> bitmap) {
-        int w = 0, h = 0;
-        for (int i = 0; i < bitmap.size(); i++) {
-            if (i < bitmap.size() - 1) {
-                h = bitmap.get(i).getHeight() > bitmap.get(i + 1).getHeight() ? bitmap.get(i).getHeight() : bitmap.get(i + 1).getHeight();
-            }
-            w += bitmap.get(i).getWidth();
-        }
-
-        Bitmap temp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(temp);
-        int top = 0;
-        for (int i = 0; i < bitmap.size(); i++) {
-            Log.e("HTML", "Combine: " + i + "/" + bitmap.size() + 1);
-
-            top = (i == 0 ? 0 : top + bitmap.get(i).getWidth());
-            //attributes 1:bitmap,2:width that starts drawing,3:height that starts drawing
-            canvas.drawBitmap(bitmap.get(i), top, 0f, null);
-        }
-        return temp;
-    }*/
-
     private boolean isBluetoothEnabled() {
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, "Device does not support bluetooth", Toast.LENGTH_LONG).show();
@@ -850,49 +688,11 @@ public class SellActivity extends AppCompatActivity {
     }
 
     void toast(int message) {
-        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
+        Toast.makeText(offlineSellActivity.this, message, Toast.LENGTH_LONG).show();
     }
 
     void toast(String message) {
-        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
-    }
-
-    private void onStarClicked() {
-        final DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
-        postRef.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                String p = mutableData.getValue().toString();
-                if (p == null) {
-                    mutableData.setValue(1);
-                    return Transaction.success(mutableData);
-                }
-                if (p.length() > 0) {
-                    int x = UHelper.parseInt(p) + 1;
-                    p = x + "";
-                } else p = "1";
-                /*if (p.stars.containsKey(getUid())) {
-                    // Unstar the post and remove self from stars
-                    p.starCount = p.starCount - 1;
-                    p.stars.remove(getUid());
-                } else {
-                    // Star the post and add self to stars
-                    p.starCount = p.starCount + 1;
-                    p.stars.put(getUid(), true);
-                }*/
-
-                // Set value and report transaction success
-                mutableData.setValue(p);
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean b,
-                                   DataSnapshot dataSnapshot) {
-                // Transaction completed
-                Log.d("TAG", "postTransaction:onComplete:" + databaseError);
-            }
-        });
+        Toast.makeText(offlineSellActivity.this, message, Toast.LENGTH_LONG).show();
     }
 
 }

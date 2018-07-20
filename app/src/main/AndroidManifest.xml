@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -38,6 +39,9 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".Settings"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".offlineSellActivity"
             android:screenOrientation="portrait" />
     </application>
 

@@ -42,7 +42,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
@@ -74,7 +76,7 @@ public class Deliver extends AppCompatActivity {
     private DatabaseReference refLocation;
     private DatabaseReference refModelName;
 
-    EditText receiptNo;
+    EditText receiptNo, receiptNoTo;
     EditText mobileno;
     EditText name;
 
@@ -100,6 +102,7 @@ public class Deliver extends AppCompatActivity {
     private static final int CENTER = 0;
     private boolean continueWithoutPrint;
 
+    private ProgressDialog pDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +113,11 @@ public class Deliver extends AppCompatActivity {
         pdWorkInProgress = new ProgressDialog(this);
         pdWorkInProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 
+        pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Please wait...");
+        pDialog.setCancelable(false);
+        pDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
         mDatabase = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales");
@@ -118,6 +126,7 @@ public class Deliver extends AppCompatActivity {
         refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
 
         receiptNo = (EditText) findViewById(R.id.receiptNo);
+        receiptNoTo = (EditText) findViewById(R.id.receiptNoTo);
         mobileno = (EditText) findViewById(R.id.mobileno);
         name = (EditText) findViewById(R.id.name);
 
@@ -173,32 +182,48 @@ public class Deliver extends AppCompatActivity {
         }
     }
 
-
     public void buttonFind(View view) {
         mtempArray.clear();
         salesArray.clear();
         Query q = null;
-        if (receiptNo.hasFocus()) {
-            if (receiptNo.getText().toString().length() != 0) {
-                String no = String.format(Locale.US, "%04d", UHelper.parseInt(receiptNo.getText().toString()));
-                q = mDatabase.child("2018").orderByChild("receiptNo").equalTo(no);
+
+        if (receiptNo.hasFocus() || receiptNoTo.hasFocus()) {
+            int rno = UHelper.parseInt(receiptNo.getText().toString());
+            int rnoTo = UHelper.parseInt(receiptNoTo.getText().toString());
+            int rlength = receiptNo.getText().toString().trim().length();
+            int rtolength = receiptNoTo.getText().toString().trim().length();
+
+            if (rno > 0 && rnoTo == 0) {
+                String no = String.format(Locale.US, "%04d", rno);
+                q = mDatabase.child(UHelper.getTime("y")).orderByChild("receiptNo").equalTo(no);
             }
+            if (rno > 0 && rnoTo > 0) {
+                String from = String.format(Locale.US, "%04d", rno);
+                String to = String.format(Locale.US, "%04d", rnoTo);
+                q = mDatabase.child(UHelper.getTime("y")).orderByChild("receiptNo").startAt(from).endAt(to);
+            }
+            if (rno == 0 && rlength > 0) {
+                q = mDatabase.child(UHelper.getTime("y")).orderByChild("receiptNo").startAt(receiptNo.getText().toString()).endAt(receiptNo.getText().toString() + "\uf8ff");
+            }
+
         } else if (mobileno.hasFocus()) {
             if (mobileno.getText().toString().length() != 0)
-                q = mDatabase.child("2018").orderByChild("mobile").startAt(mobileno.getText().toString()).endAt(mobileno.getText().toString() + "\uf8ff");
+                q = mDatabase.child(UHelper.getTime("y")).orderByChild("mobile").startAt(mobileno.getText().toString()).endAt(mobileno.getText().toString() + "\uf8ff");
         } else if (name.hasFocus()) {
             if (name.getText().toString().length() != 0)
-                q = mDatabase.child("2018").orderByChild("name").startAt(name.getText().toString().toLowerCase()).endAt(name.getText().toString().toLowerCase() + "\uf8ff");
+                q = mDatabase.child(UHelper.getTime("y")).orderByChild("name").startAt(name.getText().toString().toLowerCase()).endAt(name.getText().toString().toLowerCase() + "\uf8ff");
         }
         final Query finalQ = q;
         new Thread(new Runnable() { //this is to avoid error which uptes list view in background instead of main thread
             @Override
             public void run() {
                 if (finalQ != null) {
+                    showProgressBar(true);
                     finalQ.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             System.out.println("Inside onDataChanged");
+                            showProgressBar(false);
                             if (dataSnapshot.exists()) {
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                                     System.out.println("Query : " + data.getValue() + data.getKey());
@@ -215,6 +240,7 @@ public class Deliver extends AppCompatActivity {
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
+                            showProgressBar(false);
                             System.out.println("Database query error" + databaseError);
                         }
                     });
@@ -720,6 +746,27 @@ public class Deliver extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         mPrinter.onActivityRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void showProgressBar(final boolean visibility) {
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                if (visibility)
+                    showpDialog();
+                else hidepDialog();
+            }
+        });
+    }
+
+    private void showpDialog() {
+        if (!pDialog.isShowing())
+            pDialog.show();
+    }
+
+    private void hidepDialog() {
+        if (pDialog.isShowing())
+            pDialog.dismiss();
     }
 
 }

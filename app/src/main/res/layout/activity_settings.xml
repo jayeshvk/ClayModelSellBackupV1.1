@@ -25,5 +25,10 @@
         android:layout_height="wrap_content"
         android:onClick="printEmptyReceipt"
         android:text="Print empty receipt" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="Offlinereceipt"
+        android:text="Enter receipt offline" />
 
 </LinearLayout>
