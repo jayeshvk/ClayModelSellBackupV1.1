@@ -1,51 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_centerVertical="true"
-    android:layout_gravity="center"
-    android:layout_marginLeft="100sp"
-    android:layout_marginRight="100sp"
-    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
     android:theme="@android:style/Theme.NoTitleBar">
 
-    <Button
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:key="@+id/sell"
-        android:onClick="buttonSell"
-        android:text="Sell" />
+        android:layout_gravity="center"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="64dp"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:key="@+id/deliver"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Deliver"
-        android:onClick="buttonDeliver"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:key="@+id/sell"
+            android:onClick="buttonSell"
+            android:text="Sell" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:key="@+id/locations"
-        android:onClick="buttonSettings"
-        android:text="Settings" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:key="@+id/deliver"
+            android:onClick="buttonDeliver"
+            android:text="Deliver" />
 
-    <Button
-        android:key="@+id/buttonLogout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="buttonLogout"
-        android:text="Logout" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:key="@+id/locations"
+            android:onClick="buttonSettings"
+            android:text="Settings" />
 
-    <Button
-        android:key="@+id/buttonExit"
-        android:layout_width="match_parent"
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:key="@+id/buttonLogout"
+            android:onClick="buttonLogout"
+            android:text="Logout" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:key="@+id/buttonExit"
+            android:onClick="buttonExit"
+            android:text="Exit" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/username"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="buttonExit"
-        android:text="Exit" />
-</LinearLayout>
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:text="TextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</android.support.constraint.ConstraintLayout>

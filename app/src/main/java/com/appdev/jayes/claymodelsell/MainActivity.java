@@ -10,9 +10,11 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -29,6 +31,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainactivity);
+
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+        DatabaseReference refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
+        refYear.keepSynced(true);
+
+        TextView username = (TextView) findViewById(R.id.username);
+
+        if (user != null)
+            username.setText(user.getEmail());
 
     }
 
@@ -77,15 +89,4 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(MainActivity.this, Deliver.class));
     }
 
-/*    public static boolean isHostAvailable(final String host, final int port, final int timeout) {
-        try (final Socket socket = new Socket()) {
-            final InetAddress inetAddress = InetAddress.getByName(host);
-            final InetSocketAddress inetSocketAddress = new InetSocketAddress(inetAddress, port);
-            socket.connect(inetSocketAddress, timeout);
-            return true;
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }*/
 }

@@ -131,9 +131,10 @@ public class offlineSellActivity extends AppCompatActivity {
         locationList = new ArrayList<>();
 
         lockStat = refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/lock");
-        //refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
-        //refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
         refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
+        refYear.keepSynced(true);
+
+
         connectPrinter();
 
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
@@ -294,11 +295,8 @@ public class offlineSellActivity extends AppCompatActivity {
 
     private void saveTransaction() {
         //save to database
-        DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
-                "users/" +
-                        user.getUid() +
-                        "/sales/" +
-                        UHelper.getTime("y") + "/");
+        DatabaseReference refSale = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/");
+
         refSale.push().setValue(getSalesTransaction(), new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
@@ -318,12 +316,12 @@ public class offlineSellActivity extends AppCompatActivity {
                         printReceipt();
                         synchronized (this) {
                             try {
-                                wait(3000);
+                                wait(4000);
+                                printReceipt();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                         }
-                        printReceipt();
                     }
                     name.setText(null);
                     name.requestFocus();
@@ -333,12 +331,13 @@ public class offlineSellActivity extends AppCompatActivity {
                     comments.setText(null);
                     balance.setText(null);
                     advance.setText(null);
+                    receiptNo.setText(null);
                     modelNameSpinner.setSelection(0);
                     locationSpinner.setSelection(0);
 
                     Toast.makeText(offlineSellActivity.this, "Saved", Toast.LENGTH_LONG).show();
 
-                }
+                } else toast("Something wrong, unable to save");
             }
         });
 
@@ -502,8 +501,8 @@ public class offlineSellActivity extends AppCompatActivity {
                     checkFinish();
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_MSG:
-                    String m = b.getString(RECEIPT_PRINTER_MSG);
-                    toast(m);
+                    //String m = b.getString(RECEIPT_PRINTER_MSG);
+                    //toast(m);
                     break;
                 case RECEIPT_PRINTER_NOT_CONNECTED:
                     toast("Status : Printer Not Connected");

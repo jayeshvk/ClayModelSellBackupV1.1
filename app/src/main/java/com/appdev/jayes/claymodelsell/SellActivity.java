@@ -96,8 +96,8 @@ public class SellActivity extends AppCompatActivity {
     private static final int RIGHT = -1;
     private static final int CENTER = 0;
     private String tempPrice, tempAdvance, tempBalance, tempModelName;
-    private DatabaseReference lockStat;
-    private DatabaseReference lock;
+/*    private DatabaseReference lockStat;
+    private DatabaseReference lock;*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,7 +134,7 @@ public class SellActivity extends AppCompatActivity {
         modelList = new ArrayList<>();
         locationList = new ArrayList<>();
 
-        lockStat = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/lock");
+        //lockStat = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/lock");
         refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
         refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
         //refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
@@ -175,7 +175,8 @@ public class SellActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                showProgressBar(false);
+                toast("Unable to load data" + databaseError.getCode());
             }
         });
         showProgressBar(true);
@@ -194,6 +195,8 @@ public class SellActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                showProgressBar(false);
+                toast("Unable to load data" + databaseError.getCode());
                 System.out.println("The read failed: " + databaseError.getCode());
             }
         });
@@ -253,11 +256,26 @@ public class SellActivity extends AppCompatActivity {
             }
         });
 
+        DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
+        rcptno.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists())
+                    receiptNo.setText(String.format("%04d", UHelper.parseInt(dataSnapshot.getValue().toString())));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+
+            }
+        });
+
     }
 
 
     public void checkReceiptNo() {
-        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
+        final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
         showProgressBar(true);
         rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -288,7 +306,9 @@ public class SellActivity extends AppCompatActivity {
         if (name.getText().toString().length() == 0 || mobile.getText().toString().length() == 0 || price.getText().toString().length() == 0)
             Toast.makeText(SellActivity.this, "Please enter all details", Toast.LENGTH_SHORT).show();
         else {
-            showProgressBar(true);
+            //checkReceiptNo();
+            saveTransaction();
+/*            showProgressBar(true);
             lockStat.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -315,12 +335,11 @@ public class SellActivity extends AppCompatActivity {
                     showProgressBar(false);
                     toast("Unable to reach to server try again");
                 }
-            });
+            });*/
         }
     }
 
     private void saveTransaction() {
-        onStarClicked();
         //save to database
         DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
                 "users/" +
@@ -335,9 +354,10 @@ public class SellActivity extends AppCompatActivity {
                     Toast.makeText(SellActivity.this, "Error saving, try again!", Toast.LENGTH_LONG).show();
                 }
                 if (databaseReference != null) {
-                    final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
-                    rcptno.setValue(receiptNo.getText().toString());
-                    lockStat.setValue(Boolean.FALSE);
+                    //final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
+                    //rcptno.setValue(receiptNo.getText().toString());
+                    onStarClicked();
+                    //lockStat.setValue(Boolean.FALSE);
                     tempPrice = price.getText().toString();
                     tempAdvance = advance.getText().toString();
                     tempBalance = balance.getText().toString();
@@ -347,7 +367,8 @@ public class SellActivity extends AppCompatActivity {
                         printReceipt();
                         synchronized (this) {
                             try {
-                                wait(3000);
+                                wait(4000);
+                                ;
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -387,8 +408,12 @@ public class SellActivity extends AppCompatActivity {
         if (locationSpinner.getSelectedItemPosition() > 0)
             locationname = locationList.get(locationSpinner.getSelectedItemPosition() - 1).getGuid();
 
+        String rno;
+        if (receiptNo.getText().toString().length() == 0)
+            rno = "0001";
+        else rno = String.format("%04d", UHelper.parseInt(receiptNo.getText().toString()) + 1);
 
-        return new SellModel(receiptNo.getText().toString(),
+        return new SellModel(rno,
                 datetime.format(new Date().getTime()),
                 name.getText().toString().toLowerCase(),
                 mobile.getText().toString(),
@@ -643,7 +668,7 @@ public class SellActivity extends AppCompatActivity {
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_MSG:
                     String m = b.getString(RECEIPT_PRINTER_MSG);
-                    toast(m);
+                    //toast(m);
                     break;
                 case RECEIPT_PRINTER_NOT_CONNECTED:
                     toast("Status : Printer Not Connected");
@@ -860,17 +885,19 @@ public class SellActivity extends AppCompatActivity {
     private void onStarClicked() {
         final DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
         postRef.runTransaction(new Transaction.Handler() {
+            @NonNull
             @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                String p = mutableData.getValue().toString();
-                if (p == null) {
+            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                if (mutableData.getValue() == null) {
                     mutableData.setValue(1);
                     return Transaction.success(mutableData);
-                }
-                if (p.length() > 0) {
+                } else {
+                    String p = mutableData.getValue().toString();
                     int x = UHelper.parseInt(p) + 1;
                     p = x + "";
-                } else p = "1";
+                    mutableData.setValue(p);
+                    return Transaction.success(mutableData);
+                }
                 /*if (p.stars.containsKey(getUid())) {
                     // Unstar the post and remove self from stars
                     p.starCount = p.starCount - 1;
@@ -880,10 +907,8 @@ public class SellActivity extends AppCompatActivity {
                     p.starCount = p.starCount + 1;
                     p.stars.put(getUid(), true);
                 }*/
-
                 // Set value and report transaction success
-                mutableData.setValue(p);
-                return Transaction.success(mutableData);
+
             }
 
             @Override
