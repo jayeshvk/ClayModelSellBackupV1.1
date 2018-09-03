@@ -8,24 +8,28 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.Layout;
 import android.text.TextPaint;
-import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,8 +37,6 @@ import com.cie.btp.CieBluetoothPrinter;
 import com.cie.btp.DebugLog;
 import com.cie.btp.PrintDensity;
 import com.cie.btp.PrinterWidth;
-
-import java.util.ArrayList;
 
 import static com.appdev.jayes.claymodelsell.SellActivity.REQUEST_ENABLE_BT;
 import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_CONN_DEVICE_NAME;
@@ -67,6 +69,7 @@ public class Settings extends AppCompatActivity {
     String tempFrom, tempTo, tempDiff, tempIdentifier;
     boolean checked, disconnect;
     int tempRepeat, miliSeconds;
+    String SHAREDPREFNAME = "ClayModelSell";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +84,10 @@ public class Settings extends AppCompatActivity {
 
     public void buttonLocations(View view) {
         startActivity(new Intent(this, LocationsActivity.class));
+    }
+
+    public void buttonReport(View view) {
+        startActivity(new Intent(this, DayReport.class));
     }
 
     public void buttonClayModels(View view) {
@@ -324,7 +331,8 @@ public class Settings extends AppCompatActivity {
         mPrinter.printUnicodeText(receiptNo, Layout.Alignment.ALIGN_CENTER, textPaint);
 
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        //mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text1"), 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         mPrintUnicodeText("Dt:____________", textSize, RIGHT);
         mPrintUnicodeText("Name :", textSize, LEFT);
@@ -340,10 +348,13 @@ public class Settings extends AppCompatActivity {
         mPrinter.printLineFeed();
         //mPrintUnicodeText("Text :", textSize, LEFT);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", 22, CENTER);
+        //mPrintUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text2"), 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mPrintUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", 22, CENTER);
-        mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
+        //mPrintUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text3"), 22, CENTER);
+        //mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
+        mPrintUnicodeText(readSharedPref("text4"), 20, CENTER);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
 
         mPrinter.printLineFeed();
@@ -411,8 +422,45 @@ public class Settings extends AppCompatActivity {
         });
     }
 
-    public void Offlinereceipt(View view) {
-        startActivity(new Intent(this, offlineSellActivity.class));
+    public void buttonOfflinereceipt(View view) {
+        //startActivity(new Intent(this, offlineSellActivity.class));
+    }
+
+    public void buttonHeaderFooter(View view) {
+        LayoutInflater layoutInflater = getLayoutInflater();
+        View promptView = layoutInflater.inflate(R.layout.headerfootersetting, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setView(promptView);
+        alertDialogBuilder.setTitle("Header Footer Text");
+
+        final EditText text1 = promptView.findViewById(R.id.text1);
+        final EditText text2 = promptView.findViewById(R.id.text2);
+        final EditText text3 = promptView.findViewById(R.id.text3);
+        final EditText text4 = promptView.findViewById(R.id.text4);
+        text1.setText(readSharedPref("text1"));
+        text2.setText(readSharedPref("text2"));
+        text3.setText(readSharedPref("text3"));
+        text4.setText(readSharedPref("text4"));
+
+        alertDialogBuilder
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        writetoSharedPref("text1", text1.getText().toString());
+                        writetoSharedPref("text2", text2.getText().toString());
+                        writetoSharedPref("text3", text3.getText().toString());
+                        writetoSharedPref("text4", text4.getText().toString());
+                    }
+                })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
     }
 
     private class AsyncPrint extends AsyncTask<Void, Void, Void> {
@@ -472,6 +520,35 @@ public class Settings extends AppCompatActivity {
             //mPrinter.disconnectFromPrinter();
 
 
+        }
+    }
+
+    private void writetoSharedPref(String key, String text) {
+        SharedPreferences preferences = getSharedPreferences(SHAREDPREFNAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(key, text);
+        editor.apply();
+    }
+
+    private String readSharedPref(String KEY) {
+        String returnData = null;
+        SharedPreferences settings = getSharedPreferences(SHAREDPREFNAME, 0);
+        switch (KEY) {
+            case "text1":
+                returnData = settings.getString(KEY, "ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ");
+                return returnData;
+            case "text2":
+                returnData = settings.getString(KEY, "ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.");
+                return returnData;
+            case "text3":
+                returnData = settings.getString(KEY, "ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.");
+                return returnData;
+            case "text4":
+                returnData = settings.getString(KEY, "9448629160/9916278538/9141646176");
+                return returnData;
+            default:
+                returnData = settings.getString(KEY, null);
+                return returnData;
         }
     }
 

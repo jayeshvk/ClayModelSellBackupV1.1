@@ -60,16 +60,22 @@
         android:inputType="textPersonName" />
 
 
-    <Spinner
+<!--    <Spinner
         android:id="@+id/modelNameSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:spinnerMode="dialog" />
+        android:spinnerMode="dialog" />-->
 
     <Spinner
         android:id="@+id/locationSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
+    <AutoCompleteTextView
+        android:id="@+id/mnameList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Model Name"/>
 
     <LinearLayout
         android:layout_width="match_parent"

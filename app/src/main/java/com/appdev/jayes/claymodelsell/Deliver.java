@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -27,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -101,8 +103,12 @@ public class Deliver extends AppCompatActivity {
     private static final int RIGHT = -1;
     private static final int CENTER = 0;
     private boolean continueWithoutPrint;
-
+    AutoCompleteTextView modelName;
+    final List<String> mname = new ArrayList<>();
     private ProgressDialog pDialog;
+
+    String SHAREDPREFNAME = "ClayModelSell";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,43 +149,45 @@ public class Deliver extends AppCompatActivity {
             }
         });
 
-        { // load the datat into array list
-            tempLocationList.add("Location");
-            tempModelNameList.add("Model");
-            refLocation.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        Location loc = child.getValue(Location.class);
-                        loc.setGuid(child.getKey());
-                        tempLocationList.add(loc.getLocationName());
-                        locationList.add(loc);
-                    }
+        // load the datat into array list
+        tempLocationList.add("Location");
+        tempModelNameList.add("Model");
+        refLocation.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    Location loc = child.getValue(Location.class);
+                    loc.setGuid(child.getKey());
+                    tempLocationList.add(loc.getLocationName());
+                    locationList.add(loc);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        refModelName.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot dts : dataSnapshot.getChildren()) {
+                    ClayModel mdl = dts.getValue(ClayModel.class);
+                    mdl.setKey(dts.getKey());
+                    //tempModelNameList.add(mdl.getModelName());
+                    mname.add(mdl.getModelName());
+                    modelList.add(mdl);
                 }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
+            }
 
-                }
-            });
-            refModelName.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    for (DataSnapshot dts : dataSnapshot.getChildren()) {
-                        ClayModel mdl = dts.getValue(ClayModel.class);
-                        mdl.setKey(dts.getKey());
-                        tempModelNameList.add(mdl.getModelName());
-                        modelList.add(mdl);
-                    }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+        });
 
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    System.out.println("The read failed: " + databaseError.getCode());
-                }
-            });
-        }
     }
 
     public void buttonFind(View view) {
@@ -230,7 +238,7 @@ public class Deliver extends AppCompatActivity {
                                     SellModel temp = data.getValue(SellModel.class);
                                     temp.setKey(data.getKey());
                                     salesArray.add(temp);
-                                    ClayModel mTemp = new ClayModel(temp.getReceiptNo(), temp.getName(), temp.getMobile());
+                                    ClayModel mTemp = new ClayModel(temp.getReceiptNo(), temp.getName(), "R.No : " + temp.getReceiptNo() + "\nMob  : " + temp.getMobile());
                                     mtempArray.add(mTemp);
                                 }
                             }
@@ -279,6 +287,7 @@ public class Deliver extends AppCompatActivity {
         final EditText advance = (EditText) promptView.findViewById(R.id.advance);
         final TextView balance = (TextView) promptView.findViewById(R.id.balance);
         final TextView date = (TextView) promptView.findViewById(R.id.date);
+        final AutoCompleteTextView modelName = promptView.findViewById(R.id.mnameList);
 
         receiptNo.setText(temp.getReceiptNo());
         name.setText(temp.getName());
@@ -289,23 +298,27 @@ public class Deliver extends AppCompatActivity {
         advance.setText(temp.getAdvance());
         balance.setText(temp.getBalance());
         date.setText(UHelper.dateFormatymdhmsTOddmyyyy(temp.getDate()));
+        modelName.setText(temp.getModelName());
 
-        final Spinner modelNameSpinner = (Spinner) promptView.findViewById(R.id.modelNameSpinner);
+        //final Spinner modelNameSpinner = (Spinner) promptView.findViewById(R.id.modelNameSpinner);
         final Spinner locationSpinner = (Spinner) promptView.findViewById(R.id.locationSpinner);
 
         ArrayAdapter<String> locationAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempLocationList);
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         locationSpinner.setAdapter(locationAdapter);
-        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempModelNameList);
+/*        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempModelNameList);
         modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        modelNameSpinner.setAdapter(modelAdapter);
+        modelNameSpinner.setAdapter(modelAdapter);*/
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, mname);
+        modelName.setThreshold(1);
+        modelName.setAdapter(adapter);
 
-        for (int i = 0; i < modelList.size(); i++) {
+/*        for (int i = 0; i < modelList.size(); i++) {
             if (temp.getModelName().equals(modelList.get(i).getKey())) {
                 modelNameSpinner.setSelection(i + 1);
                 break;
             }
-        }
+        }*/
         for (int i = 0; i < locationList.size(); i++) {
             if (temp.getLocation().equals(locationList.get(i).getGuid())) {
                 locationSpinner.setSelection(i + 1);
@@ -313,7 +326,7 @@ public class Deliver extends AppCompatActivity {
             }
         }
 
-        modelNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+/*        modelNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String temp = parent.getItemAtPosition(position).toString();
@@ -328,7 +341,7 @@ public class Deliver extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
-        });
+        });*/
         price.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -415,8 +428,10 @@ public class Deliver extends AppCompatActivity {
                             settled = "true";
                         String modelname = "";
                         String locationname = "";
-                        if (modelNameSpinner.getSelectedItemPosition() > 0)
-                            modelname = modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
+/*                        if (modelNameSpinner.getSelectedItemPosition() > 0)
+                            modelname = modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();*/
+                        modelname = modelName.getText().toString();
+
                         if (locationSpinner.getSelectedItemPosition() > 0)
                             locationname = locationList.get(locationSpinner.getSelectedItemPosition() - 1).getGuid();
 
@@ -440,7 +455,8 @@ public class Deliver extends AppCompatActivity {
                                 tempPrice = price.getText().toString();
                                 tempAdvance = advance.getText().toString();
                                 tempBalance = balance.getText().toString();
-                                tempModelName = modelNameSpinner.getSelectedItem().toString();
+                                //tempModelName = modelNameSpinner.getSelectedItem().toString();
+                                tempModelName = modelName.getText().toString();
                                 connectPrinter();
                             }
                         });
@@ -642,6 +658,7 @@ public class Deliver extends AppCompatActivity {
                     toast(R.string.printer_connected);
                     pdWorkInProgress.cancel();
                     printReceipt();
+                    printReceipt();
                     break;
                 case RECEIPT_PRINTER_CONN_DEVICE_NAME:
                     break;
@@ -694,7 +711,8 @@ public class Deliver extends AppCompatActivity {
         mPrinter.printUnicodeText(salesData.getReceiptNo(), Layout.Alignment.ALIGN_CENTER, textPaint);
 
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        //mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text1"), 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         mPrintUnicodeText("Dt:" + UHelper.dateFormatymdhmsTOddmyyyy(salesData.getDate()), textSize, RIGHT);
         mPrintUnicodeText("Name  :" + salesData.getName(), textSize, LEFT);
@@ -707,10 +725,13 @@ public class Deliver extends AppCompatActivity {
         mPrintUnicodeText("Bal :₹" + tempBalance, 34, LEFT);
         mPrintUnicodeText("Text  :" + salesData.getComments(), textSize, LEFT);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", 22, CENTER);
+        //mPrintUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text2"), 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mPrintUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", 22, CENTER);
-        mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
+        //mPrintUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text3"), 22, CENTER);
+        //mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
+        mPrintUnicodeText(readSharedPref("text4"), 20, CENTER);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
 
         mPrinter.printLineFeed();
@@ -767,6 +788,28 @@ public class Deliver extends AppCompatActivity {
     private void hidepDialog() {
         if (pDialog.isShowing())
             pDialog.dismiss();
+    }
+
+    private String readSharedPref(String KEY) {
+        String returnData = null;
+        SharedPreferences settings = getSharedPreferences(SHAREDPREFNAME, 0);
+        switch (KEY) {
+            case "text1":
+                returnData = settings.getString(KEY, "ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ");
+                return returnData;
+            case "text2":
+                returnData = settings.getString(KEY, "ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.");
+                return returnData;
+            case "text3":
+                returnData = settings.getString(KEY, "ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.");
+                return returnData;
+            case "text4":
+                returnData = settings.getString(KEY, "9448629160/9916278538/9141646176");
+                return returnData;
+            default:
+                returnData = settings.getString(KEY, null);
+                return returnData;
+        }
     }
 
 }

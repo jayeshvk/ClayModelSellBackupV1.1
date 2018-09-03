@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -25,6 +26,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -80,7 +82,7 @@ public class SellActivity extends AppCompatActivity {
     EditText advance;
     TextView balance;
     Spinner locationSpinner;
-    Spinner modelNameSpinner;
+    //Spinner modelNameSpinner;
 
     private ProgressDialog pDialog;
 
@@ -96,6 +98,7 @@ public class SellActivity extends AppCompatActivity {
     private static final int RIGHT = -1;
     private static final int CENTER = 0;
     private String tempPrice, tempAdvance, tempBalance, tempModelName;
+    AutoCompleteTextView modelName;
 /*    private DatabaseReference lockStat;
     private DatabaseReference lock;*/
 
@@ -141,21 +144,21 @@ public class SellActivity extends AppCompatActivity {
         connectPrinter();
 
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
-        modelNameSpinner = (Spinner) findViewById(R.id.modelNameSpinner);
+        //modelNameSpinner = (Spinner) findViewById(R.id.modelNameSpinner);
 
         final List<String> tempLocationList = new ArrayList<>();
-        final List<String> tempModelNameList = new ArrayList<>();
+        //final List<String> tempModelNameList = new ArrayList<>();
 
         tempLocationList.add("Location");
-        tempModelNameList.add("Model");
+        //tempModelNameList.add("Model");
 
         ArrayAdapter<String> locationAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempLocationList);
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         locationSpinner.setAdapter(locationAdapter);
 
-        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempModelNameList);
+/*        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempModelNameList);
         modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        modelNameSpinner.setAdapter(modelAdapter);
+        modelNameSpinner.setAdapter(modelAdapter);*/
 
         //get Receipt number
         receiptno();
@@ -180,6 +183,8 @@ public class SellActivity extends AppCompatActivity {
             }
         });
         showProgressBar(true);
+        final List<String> mname = new ArrayList<>();
+
         refModelName.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -187,7 +192,8 @@ public class SellActivity extends AppCompatActivity {
                 for (DataSnapshot dts : dataSnapshot.getChildren()) {
                     ClayModel mdl = dts.getValue(ClayModel.class);
                     mdl.setKey(dts.getKey());
-                    tempModelNameList.add(mdl.getModelName());
+                    //tempModelNameList.add(mdl.getModelName());
+                    mname.add(mdl.getModelName());
                     modelList.add(mdl);
                 }
 
@@ -201,14 +207,31 @@ public class SellActivity extends AppCompatActivity {
             }
         });
 
-        modelNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, mname);
+        modelName = findViewById(R.id.mnameList);
+        modelName.setThreshold(1);
+        modelName.setAdapter(adapter);
+        modelName.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String temp = parent.getItemAtPosition(position).toString();
+                for (int i = 0; i < modelList.size(); i++) {
+                    if (modelList.get(i).getModelName().contains(temp))
+                        price.setText(modelList.get(i).getModelPrice());
+                }
+            }
+        });
+
+
+/*        modelNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String temp = parent.getItemAtPosition(position).toString();
+
                 if (position == 0) {
                     price.setText(null);
                     balance.setText(null);
-
                 } else {
                     price.setText(modelList.get(position - 1).getModelPrice());
                 }
@@ -218,58 +241,65 @@ public class SellActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
-        });
-        price.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        });*/
 
-            }
+        price.addTextChangedListener(new
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Double bal = UHelper.parseDouble(s.toString()) - UHelper.parseDouble(advance.getText().toString());
-                balance.setText(bal.toString());
-            }
+                                             TextWatcher() {
+                                                 @Override
+                                                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-            @Override
-            public void afterTextChanged(Editable s) {
+                                                 }
 
-            }
-        });
-        advance.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                                                 @Override
+                                                 public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                     Double bal = UHelper.parseDouble(s.toString()) - UHelper.parseDouble(advance.getText().toString());
+                                                     balance.setText(bal.toString());
+                                                 }
 
-            }
+                                                 @Override
+                                                 public void afterTextChanged(Editable s) {
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                 }
+                                             });
+        advance.addTextChangedListener(new
+
+                                               TextWatcher() {
+                                                   @Override
+                                                   public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                   }
+
+                                                   @Override
+                                                   public void onTextChanged(CharSequence s, int start, int before, int count) {
 
 
-                Double bal = UHelper.parseDouble(price.getText().toString()) - UHelper.parseDouble(s.toString());
-                balance.setText(bal.toString());
-            }
+                                                       Double bal = UHelper.parseDouble(price.getText().toString()) - UHelper.parseDouble(s.toString());
+                                                       balance.setText(bal.toString());
+                                                   }
 
-            @Override
-            public void afterTextChanged(Editable s) {
+                                                   @Override
+                                                   public void afterTextChanged(Editable s) {
 
-            }
-        });
+                                                   }
+                                               });
 
         DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
-        rcptno.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists())
-                    receiptNo.setText(String.format("%04d", UHelper.parseInt(dataSnapshot.getValue().toString())));
-            }
+        rcptno.addValueEventListener(new
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+                                             ValueEventListener() {
+                                                 @Override
+                                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                                     if (dataSnapshot.exists())
+                                                         receiptNo.setText(String.format("%04d", UHelper.parseInt(dataSnapshot.getValue().toString())));
+                                                 }
+
+                                                 @Override
+                                                 public void onCancelled(@NonNull DatabaseError databaseError) {
 
 
-            }
-        });
+                                                 }
+                                             });
 
     }
 
@@ -361,14 +391,13 @@ public class SellActivity extends AppCompatActivity {
                     tempPrice = price.getText().toString();
                     tempAdvance = advance.getText().toString();
                     tempBalance = balance.getText().toString();
-                    tempModelName = modelNameSpinner.getSelectedItem().toString();
+                    tempModelName = modelName.getText().toString();
                     //on successfull save print 2 copies
                     if (!continueWithoutPrint) {
                         printReceipt();
                         synchronized (this) {
                             try {
                                 wait(4000);
-                                ;
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -383,7 +412,8 @@ public class SellActivity extends AppCompatActivity {
                     comments.setText(null);
                     balance.setText(null);
                     advance.setText(null);
-                    modelNameSpinner.setSelection(0);
+                    modelName.setText(null);
+                    //modelNameSpinner.setSelection(0);
                     locationSpinner.setSelection(0);
 
                     Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
@@ -402,8 +432,9 @@ public class SellActivity extends AppCompatActivity {
         String modelname = "";
         String locationname = "";
 
-        if (modelNameSpinner.getSelectedItemPosition() > 0)
-            modelname = modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();
+/*        if (modelNameSpinner.getSelectedItemPosition() > 0)
+            modelname = modelList.get(modelNameSpinner.getSelectedItemPosition() - 1).getKey();*/
+        modelname = modelName.getText().toString();
 
         if (locationSpinner.getSelectedItemPosition() > 0)
             locationname = locationList.get(locationSpinner.getSelectedItemPosition() - 1).getGuid();
@@ -583,7 +614,8 @@ public class SellActivity extends AppCompatActivity {
         mPrinter.printUnicodeText(salesData.getReceiptNo(), Layout.Alignment.ALIGN_CENTER, textPaint);
 
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        //mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text1"), 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         mPrintUnicodeText("Dt:" + UHelper.dateFormatymdhmsTOddmyyyy(salesData.getDate()), textSize, RIGHT);
         mPrintUnicodeText("Name  :" + salesData.getName(), textSize, LEFT);
@@ -596,10 +628,10 @@ public class SellActivity extends AppCompatActivity {
         mPrintUnicodeText("Bal :₹" + tempBalance, 34, LEFT);
         mPrintUnicodeText("Text  :" + salesData.getComments(), textSize, LEFT);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-        mPrintUnicodeText("ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.", 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text2"), 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        mPrintUnicodeText("ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.", 22, CENTER);
-        mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
+        mPrintUnicodeText(readSharedPref("text3"), 22, CENTER);
+        mPrintUnicodeText(readSharedPref("text4"), 20, CENTER);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
 
         mPrinter.printLineFeed();
@@ -918,6 +950,28 @@ public class SellActivity extends AppCompatActivity {
                 Log.d("TAG", "postTransaction:onComplete:" + databaseError);
             }
         });
+    }
+
+    private String readSharedPref(String KEY) {
+        String returnData = null;
+        SharedPreferences settings = getSharedPreferences("ClayModelSell", 0);
+        switch (KEY) {
+            case "text1":
+                returnData = settings.getString(KEY, "ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ");
+                return returnData;
+            case "text2":
+                returnData = settings.getString(KEY, "ವಿಶೇಷ ಸೂಚನೆ : ಗಣಪತಿ ಮೂರ್ತಿಯನ್ನು ಚವತಿಯ ದಿವಸ ಮಧ್ಯಾನ್ಹ 12 ಘಂಟೆಯ ಒಳಗೆ ವಯ್ಯಬೇಕು. ಬರುವಾಗ ಇ ಚೀಟಿಯನ್ನುತಪ್ಪದೆ ತರಬೇಕು.");
+                return returnData;
+            case "text3":
+                returnData = settings.getString(KEY, "ತಯಾರಕರು : ಸಿ. ವಿ. ಚಿತ್ರಗಾರ, ಮರಾಠಿಕೊಪ್ಪ, ಶಿರಸಿ.");
+                return returnData;
+            case "text4":
+                returnData = settings.getString(KEY, "9448629160/9916278538/9141646176");
+                return returnData;
+            default:
+                returnData = settings.getString(KEY, null);
+                return returnData;
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_centerVertical="true"
@@ -25,10 +26,18 @@
         android:layout_height="wrap_content"
         android:onClick="printEmptyReceipt"
         android:text="Print empty receipt" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="buttonHeaderFooter"
+        android:text="Header Footer Text" />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="Offlinereceipt"
-        android:text="Enter manual receipt number" />
+        android:onClick="buttonReport"
+        android:text="Report" />
 
 </LinearLayout>

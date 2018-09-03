@@ -43,6 +43,8 @@
         <activity
             android:name=".offlineSellActivity"
             android:screenOrientation="portrait" />
+        <activity android:name=".DayReport" />
+        <activity android:name=".DailyReport"></activity>
     </application>
 
 </manifest>

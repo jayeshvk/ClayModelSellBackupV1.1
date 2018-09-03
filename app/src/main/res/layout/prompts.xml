@@ -86,11 +86,16 @@
         android:inputType="textPersonName" />
 
 
-    <Spinner
-        android:id="@+id/modelNameSpinner"
+    <!--    <Spinner
+            android:id="@+id/modelNameSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dialog" />-->
+    <AutoCompleteTextView
+        android:id="@+id/mnameList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:spinnerMode="dialog" />
+        android:hint="Model Name" />
 
     <Spinner
         android:id="@+id/locationSpinner"

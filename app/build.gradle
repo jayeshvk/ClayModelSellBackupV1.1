@@ -30,6 +30,7 @@ dependencies {
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.android.support:cardview-v7:27.1.1'
     implementation files('libs/cie-bluetooth-printer-sdk-v2.1.6')
+    implementation 'de.codecrafters.tableview:tableview:2.8.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
