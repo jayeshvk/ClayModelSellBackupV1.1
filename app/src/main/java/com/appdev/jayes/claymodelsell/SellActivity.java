@@ -67,10 +67,6 @@ import static com.cie.btp.BtpConsts.RECEIPT_PRINTER_STATUS;
 
 public class SellActivity extends AppCompatActivity {
 
-    private DatabaseReference refLocation;
-    private DatabaseReference refModelName;
-    private DatabaseReference refYear;
-    private FirebaseAuth mAuth;
     private FirebaseUser user;
 
     TextView receiptNo;
@@ -108,7 +104,7 @@ public class SellActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sell);
 
 
-        mAuth = FirebaseAuth.getInstance();
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
 
 
@@ -120,9 +116,6 @@ public class SellActivity extends AppCompatActivity {
         comments = (EditText) findViewById(R.id.comments);
         advance = (EditText) findViewById(R.id.advance);
         balance = (TextView) findViewById(R.id.balance);
-
-        ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.GONE);
 
         pDialog = new ProgressDialog(this);
         pDialog.setMessage("Please wait...");
@@ -138,10 +131,22 @@ public class SellActivity extends AppCompatActivity {
         locationList = new ArrayList<>();
 
         //lockStat = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/lock");
-        refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
-        refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
-        //refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
-        connectPrinter();
+        DatabaseReference refModelName = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/claymodels");
+        DatabaseReference refLocation = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/locations");
+        DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
+        rcptno.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists())
+                    receiptNo.setText(String.format("%04d", UHelper.parseInt(dataSnapshot.getValue().toString())));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+//refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
 
         locationSpinner = (Spinner) findViewById(R.id.locationSpinner);
         //modelNameSpinner = (Spinner) findViewById(R.id.modelNameSpinner);
@@ -156,14 +161,7 @@ public class SellActivity extends AppCompatActivity {
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         locationSpinner.setAdapter(locationAdapter);
 
-/*        ArrayAdapter<String> modelAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, tempModelNameList);
-        modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        modelNameSpinner.setAdapter(modelAdapter);*/
-
-        //get Receipt number
-        receiptno();
-
-        showProgressBar(true);
+        showProgressBar(true, "loading Location data");
         refLocation.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -182,9 +180,8 @@ public class SellActivity extends AppCompatActivity {
                 toast("Unable to load data" + databaseError.getCode());
             }
         });
-        showProgressBar(true);
         final List<String> mname = new ArrayList<>();
-
+        showProgressBar(true, "Loading auto complete text");
         refModelName.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -221,6 +218,7 @@ public class SellActivity extends AppCompatActivity {
                 }
             }
         });
+        connectPrinter();
 
 
 /*        modelNameSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
@@ -284,29 +282,13 @@ public class SellActivity extends AppCompatActivity {
                                                    }
                                                });
 
-        DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
-        rcptno.addValueEventListener(new
-
-                                             ValueEventListener() {
-                                                 @Override
-                                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                     if (dataSnapshot.exists())
-                                                         receiptNo.setText(String.format("%04d", UHelper.parseInt(dataSnapshot.getValue().toString())));
-                                                 }
-
-                                                 @Override
-                                                 public void onCancelled(@NonNull DatabaseError databaseError) {
-
-
-                                                 }
-                                             });
-
     }
 
 
+/*
     public void checkReceiptNo() {
+        showProgressBar(true, "Getting Receipt No");
         final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptnoNew");
-        showProgressBar(true);
         rcptno.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -327,9 +309,12 @@ public class SellActivity extends AppCompatActivity {
                 showProgressBar(false);
                 toast("Error with firebase :" + databaseError);
                 toast("Please try again later !");
+                finish();
             }
         });
     }
+*/
+
 
     public void buttonSave(View view) {
         //Validate and collect all data
@@ -370,6 +355,7 @@ public class SellActivity extends AppCompatActivity {
     }
 
     private void saveTransaction() {
+        showProgressBar(true, "Saving data");
         //save to database
         DatabaseReference refSale = FirebaseDatabase.getInstance().getReference(
                 "users/" +
@@ -381,13 +367,11 @@ public class SellActivity extends AppCompatActivity {
             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 
                 if (databaseError != null) {
+                    showProgressBar(false);
                     Toast.makeText(SellActivity.this, "Error saving, try again!", Toast.LENGTH_LONG).show();
                 }
                 if (databaseReference != null) {
-                    //final DatabaseReference rcptno = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/" + UHelper.getTime("y") + "/receiptno");
-                    //rcptno.setValue(receiptNo.getText().toString());
                     onStarClicked();
-                    //lockStat.setValue(Boolean.FALSE);
                     tempPrice = price.getText().toString();
                     tempAdvance = advance.getText().toString();
                     tempBalance = balance.getText().toString();
@@ -402,7 +386,7 @@ public class SellActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
-                        printReceipt();
+                        printSecondReceipt();
                     }
                     name.setText(null);
                     name.requestFocus();
@@ -415,9 +399,8 @@ public class SellActivity extends AppCompatActivity {
                     modelName.setText(null);
                     //modelNameSpinner.setSelection(0);
                     locationSpinner.setSelection(0);
-
+                    showProgressBar(false);
                     Toast.makeText(SellActivity.this, "Saved", Toast.LENGTH_LONG).show();
-
                 }
             }
         });
@@ -471,6 +454,18 @@ public class SellActivity extends AppCompatActivity {
         });
     }
 
+    private void showProgressBar(final boolean visibility, final String message) {
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                pDialog.setMessage(message);
+                if (visibility)
+                    showpDialog();
+                else hidepDialog();
+            }
+        });
+    }
+
     private void showpDialog() {
         if (!pDialog.isShowing())
             pDialog.show();
@@ -479,10 +474,6 @@ public class SellActivity extends AppCompatActivity {
     private void hidepDialog() {
         if (pDialog.isShowing())
             pDialog.dismiss();
-    }
-
-    private void receiptno() {
-
     }
 
 /*    private void printReceipt() {
@@ -618,7 +609,7 @@ public class SellActivity extends AppCompatActivity {
         mPrintUnicodeText(readSharedPref("text1"), 22, CENTER);
         mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         mPrintUnicodeText("Dt:" + UHelper.dateFormatymdhmsTOddmyyyy(salesData.getDate()), textSize, RIGHT);
-        mPrintUnicodeText("Name  :" + salesData.getName(), textSize, LEFT);
+        mPrintUnicodeText("Name  :" + salesData.getName(), 32, LEFT);
         mPrintUnicodeText("Mob   :" + salesData.getMobile(), textSize, LEFT);
         if (!tempModelName.contains("Model"))
             mPrintUnicodeText("Model : " + tempModelName, 32, LEFT);
@@ -634,6 +625,48 @@ public class SellActivity extends AppCompatActivity {
         mPrintUnicodeText(readSharedPref("text4"), 20, CENTER);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
 
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.resetPrinter();
+    }
+
+    private void printSecondReceipt() {
+        mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
+        mPrinter.setAlignmentCenter();
+        int textSize = 25;
+
+        SellModel salesData = getSalesTransaction();
+
+        //Print receipt number
+        Typeface custom_font = Typeface.createFromAsset(getAssets(), "fonts/ErasBoldITC.ttf");
+        TextPaint textPaint = new TextPaint();
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(125);
+        textPaint.setTypeface(custom_font);
+        mPrinter.printUnicodeText(salesData.getReceiptNo(), Layout.Alignment.ALIGN_CENTER, textPaint);
+
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+        //mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
+        mPrintUnicodeText(UHelper.dateFormatymdhmsTOddmyyyy(salesData.getDate()), textSize, RIGHT);
+        mPrintUnicodeText("Name  :" + salesData.getName(), textSize, LEFT);
+        mPrintUnicodeText("Mob   :" + salesData.getMobile(), textSize, LEFT);
+        if (!tempModelName.contains("Model"))
+            mPrintUnicodeText("Model : " + tempModelName, 32, LEFT);
+        mPrintUnicodeText("City  :" + salesData.getCity(), textSize, LEFT);
+        mPrintUnicodeText("Price :₹" + tempPrice, textSize, LEFT);
+        mPrintUnicodeText("Advnc :₹" + tempAdvance, textSize, LEFT);
+        mPrintUnicodeText("Bal :₹" + tempBalance, 34, LEFT);
+        mPrintUnicodeText("Text  :" + salesData.getComments(), textSize, LEFT);
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
         mPrinter.printLineFeed();
         mPrinter.printLineFeed();
         mPrinter.printLineFeed();
@@ -681,10 +714,10 @@ public class SellActivity extends AppCompatActivity {
                     checkFinish();
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_LISTEN:
-                    toast(R.string.ready_for_conn);
+                    //toast(R.string.ready_for_conn);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTING:
-                    toast(R.string.printer_connecting);
+                    //toast(R.string.printer_connecting);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTED:
                     toast(R.string.printer_connected);
@@ -694,7 +727,7 @@ public class SellActivity extends AppCompatActivity {
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_ERROR_MSG:
                     String n = b.getString(RECEIPT_PRINTER_MSG);
-                    toast(n);
+                    //toast(n);
                     pdWorkInProgress.cancel();
                     checkFinish();
                     break;
@@ -703,7 +736,7 @@ public class SellActivity extends AppCompatActivity {
                     //toast(m);
                     break;
                 case RECEIPT_PRINTER_NOT_CONNECTED:
-                    toast("Status : Printer Not Connected");
+                    //toast("Status : Printer Not Connected");
                     pdWorkInProgress.cancel();
                     checkFinish();
                     break;
@@ -907,11 +940,11 @@ public class SellActivity extends AppCompatActivity {
     }
 
     void toast(int message) {
-        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
+        Toast.makeText(SellActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
     void toast(String message) {
-        Toast.makeText(SellActivity.this, message, Toast.LENGTH_LONG).show();
+        Toast.makeText(SellActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void onStarClicked() {

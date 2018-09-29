@@ -40,4 +40,10 @@
         android:onClick="buttonReport"
         android:text="Report" />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="buttonBatteryStat"
+        android:text="Battery Status" />
+
 </LinearLayout>

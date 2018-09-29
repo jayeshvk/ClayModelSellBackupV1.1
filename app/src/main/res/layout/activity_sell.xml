@@ -75,6 +75,9 @@
         android:id="@+id/mnameList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:imeOptions="actionNext"
         android:hint="Model Name"/>
 
     <LinearLayout
@@ -155,13 +158,6 @@
         android:layout_gravity="center"
         android:onClick="buttonSave"
         android:text="Save" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true" />
 
 
 </LinearLayout>

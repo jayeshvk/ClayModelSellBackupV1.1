@@ -43,6 +43,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Locale;
 
 import de.codecrafters.tableview.SortableTableView;
@@ -83,13 +85,11 @@ public class DayReport extends AppCompatActivity {
     private FirebaseUser user;
     ArrayList<SellModel> salesArray = new ArrayList<>();
     private static final String[] TABLE_HEADERS = {"R.No", "Name", "Rate", "Bal"};
-    private static final String[] TABLE_HEADERS1 = {"R.No", "Model", "Mobile", "Date"};
     String[][] SellModels;
     String[][] SellModels1;
     private ProgressDialog pDialog;
     Boolean flag;
     SortableTableView<String[]> tableView;
-    SortableTableView<String[]> tableView1;
     Calendar myCalendar = Calendar.getInstance();
 
     TextView fromDate, toDate;
@@ -118,7 +118,7 @@ public class DayReport extends AppCompatActivity {
         tableView = (SortableTableView<String[]>) findViewById(R.id.tableView);
         tableView.setHeaderElevation(10);
         TableColumnDpWidthModel columnModel = new TableColumnDpWidthModel(DayReport.this, 4, 100);
-        columnModel.setColumnWidth(0, 70);
+        columnModel.setColumnWidth(0, 90);
         columnModel.setColumnWidth(1, 130);
         columnModel.setColumnWidth(2, 100);
         columnModel.setColumnWidth(3, 100);
@@ -130,15 +130,6 @@ public class DayReport extends AppCompatActivity {
                 Toast.makeText(DayReport.this, ((String[]) clickedData)[2], Toast.LENGTH_LONG).show();
             }
         });
-        tableView1 = (SortableTableView<String[]>) findViewById(R.id.tableView1);
-        tableView1.setHeaderElevation(10);
-        TableColumnDpWidthModel columnModel1 = new TableColumnDpWidthModel(DayReport.this, 4, 100);
-        columnModel1.setColumnWidth(0, 70);
-        columnModel1.setColumnWidth(1, 130);
-        columnModel1.setColumnWidth(2, 100);
-        columnModel1.setColumnWidth(3, 100);
-        tableView1.setColumnModel(columnModel);
-        tableView1.setHeaderAdapter(new SimpleTableHeaderAdapter(this, TABLE_HEADERS1));
 
         fromDate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -166,6 +157,13 @@ public class DayReport extends AppCompatActivity {
     }
 
     private void populateData() {
+
+        Collections.sort(salesArray, new Comparator<SellModel>() {
+            @Override
+            public int compare(SellModel o1, SellModel o2) {
+                return o1.getReceiptNo().compareTo(o2.getReceiptNo());
+            }
+        });
 
         SellModels = new String[salesArray.size()][4];
         System.out.println("\n*********************" + salesArray.size());
@@ -244,7 +242,6 @@ public class DayReport extends AppCompatActivity {
                     }
                     populateData();
                     tableView.setDataAdapter(new SimpleTableDataAdapter(DayReport.this, SellModels));
-                    tableView1.setDataAdapter(new SimpleTableDataAdapter(DayReport.this, SellModels1));
                 }
 
                 @Override
@@ -302,7 +299,7 @@ public class DayReport extends AppCompatActivity {
     }
 
     void toast(int message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     void connect() {
@@ -420,10 +417,10 @@ public class DayReport extends AppCompatActivity {
                     checkFinish();
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_LISTEN:
-                    toast(R.string.ready_for_conn);
+                    //toast(R.string.ready_for_conn);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTING:
-                    toast(R.string.printer_connecting);
+                    //toast(R.string.printer_connecting);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTED:
                     toast(R.string.printer_connected);
@@ -434,7 +431,7 @@ public class DayReport extends AppCompatActivity {
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_ERROR_MSG:
                     String n = b.getString(RECEIPT_PRINTER_MSG);
-                    toast(n);
+                    //toast(n);
                     pdWorkInProgress.cancel();
                     checkFinish();
                     break;
@@ -538,7 +535,7 @@ public class DayReport extends AppCompatActivity {
         mPrinter.printUnicodeText("Report", Layout.Alignment.ALIGN_CENTER, textPaint);
         String previousDate = "";
         for (int i = 0; i < salesArray.size(); i++) {
-            if (salesArray.get(i).getDate().substring(0, 10).contains(previousDate)) {
+            if (!salesArray.get(i).getDate().substring(0, 10).contains(previousDate)) {
                 mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
                 mPrintUnicodeText(salesArray.get(i).getDate().substring(0, 10), 22, CENTER);
                 mPrinter.printTextLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");

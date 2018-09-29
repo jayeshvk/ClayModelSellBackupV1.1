@@ -84,6 +84,7 @@ public class SellModel {
         this.modelName = modelName;
         this.location = location;
         this.settled = settled;
+
     }
 
     public String getSettled() {
@@ -189,6 +190,5 @@ public class SellModel {
     public void setLocation(String location) {
         this.location = location;
     }
-
 
 }

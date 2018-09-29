@@ -86,6 +86,10 @@ public class Settings extends AppCompatActivity {
         startActivity(new Intent(this, LocationsActivity.class));
     }
 
+    public void buttonBatteryStat(View view) {
+        toast("Battery Percentage : " + mPrinter.getBatteryStatus());
+    }
+
     public void buttonReport(View view) {
         startActivity(new Intent(this, DayReport.class));
     }
@@ -184,7 +188,7 @@ public class Settings extends AppCompatActivity {
                     // User did not enable Bluetooth or an error occurred
                     pdWorkInProgress.cancel();
                     toast("Bluetooth not switched on");
-                    checkFinish();
+                    //checkFinish();
                 }
                 break;
 
@@ -194,9 +198,9 @@ public class Settings extends AppCompatActivity {
         }
     }
 
-    private void checkFinish() {
+/*    private void checkFinish() {
         toast("Issue connecting to printer, please check the printer!");
-    }
+    }*/
 
     private boolean isBluetoothEnabled() {
         if (mBluetoothAdapter == null) {
@@ -268,13 +272,13 @@ public class Settings extends AppCompatActivity {
                 case RECEIPT_PRINTER_CONN_STATE_NONE:
                     toast(R.string.printer_not_conn);
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_LISTEN:
-                    toast(R.string.ready_for_conn);
+                    //toast(R.string.ready_for_conn);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTING:
-                    toast(R.string.printer_connecting);
+                    //toast(R.string.printer_connecting);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTED:
                     toast(R.string.printer_connected);
@@ -285,9 +289,9 @@ public class Settings extends AppCompatActivity {
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_ERROR_MSG:
                     String n = b.getString(RECEIPT_PRINTER_MSG);
-                    toast(n);
+                    //toast(n);
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_MSG:
                     String m = b.getString(RECEIPT_PRINTER_MSG);
@@ -296,12 +300,12 @@ public class Settings extends AppCompatActivity {
                 case RECEIPT_PRINTER_NOT_CONNECTED:
                     toast("Status : Printer Not Connected");
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_NOT_FOUND:
                     toast("Status : Printer Not Found");
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_SAVED:
                     toast(R.string.printer_saved);
@@ -398,7 +402,7 @@ public class Settings extends AppCompatActivity {
     }
 
     void toast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void showProgressBar() {

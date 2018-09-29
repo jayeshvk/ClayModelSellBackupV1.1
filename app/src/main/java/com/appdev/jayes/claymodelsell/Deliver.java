@@ -507,7 +507,7 @@ public class Deliver extends AppCompatActivity {
                     // User did not enable Bluetooth or an error occurred
                     pdWorkInProgress.cancel();
                     toast("Bluetooth not switched on");
-                    checkFinish();
+                    //checkFinish();
                 }
                 break;
 
@@ -517,7 +517,9 @@ public class Deliver extends AppCompatActivity {
         }
     }
 
+/*
     private void checkFinish() {
+*/
 /*        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setTitle("Printing Issue");
@@ -542,11 +544,13 @@ public class Deliver extends AppCompatActivity {
         });
 
         AlertDialog alert = builder.create();
-        alert.show();*/
+        alert.show();*//*
+
         toast("Issue connecting to printer, please check the printer!");
     }
+*/
 
-    private Bitmap combineImageIntoOneFlexWidth(ArrayList<Bitmap> bitmap) {
+/*    private Bitmap combineImageIntoOneFlexWidth(ArrayList<Bitmap> bitmap) {
         int w = 0, h = 0;
         for (int i = 0; i < bitmap.size(); i++) {
             if (i < bitmap.size() - 1) {
@@ -566,7 +570,7 @@ public class Deliver extends AppCompatActivity {
             canvas.drawBitmap(bitmap.get(i), top, 0f, null);
         }
         return temp;
-    }
+    }*/
 
     private boolean isBluetoothEnabled() {
         if (mBluetoothAdapter == null) {
@@ -646,41 +650,39 @@ public class Deliver extends AppCompatActivity {
                 case RECEIPT_PRINTER_CONN_STATE_NONE:
                     toast(R.string.printer_not_conn);
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_LISTEN:
-                    toast(R.string.ready_for_conn);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTING:
-                    toast(R.string.printer_connecting);
                     break;
                 case RECEIPT_PRINTER_CONN_STATE_CONNECTED:
                     toast(R.string.printer_connected);
                     pdWorkInProgress.cancel();
                     printReceipt();
-                    printReceipt();
+                    printSecondReceipt();
                     break;
                 case RECEIPT_PRINTER_CONN_DEVICE_NAME:
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_ERROR_MSG:
                     String n = b.getString(RECEIPT_PRINTER_MSG);
-                    toast(n);
+                    //toast(n);
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_NOTIFICATION_MSG:
                     String m = b.getString(RECEIPT_PRINTER_MSG);
-                    toast(m);
+                    //toast(m);
                     break;
                 case RECEIPT_PRINTER_NOT_CONNECTED:
                     toast("Status : Printer Not Connected");
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_NOT_FOUND:
                     toast("Status : Printer Not Found");
                     pdWorkInProgress.cancel();
-                    checkFinish();
+                    //checkFinish();
                     break;
                 case RECEIPT_PRINTER_SAVED:
                     toast(R.string.printer_saved);
@@ -693,15 +695,11 @@ public class Deliver extends AppCompatActivity {
         mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
         mPrinter.setAlignmentCenter();
         int textSize = 25;
-
         SellModel salesData = salesArray.get(transactionID);
-
         //Print logo
         Bitmap logo = BitmapFactory.decodeResource(getResources(), R.mipmap.logo);
         mPrinter.printGrayScaleImage(logo, 1);
-
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
-
         //Print receipt number
         Typeface custom_font = Typeface.createFromAsset(getAssets(), "fonts/ErasBoldITC.ttf");
         TextPaint textPaint = new TextPaint();
@@ -709,7 +707,6 @@ public class Deliver extends AppCompatActivity {
         textPaint.setTextSize(125);
         textPaint.setTypeface(custom_font);
         mPrinter.printUnicodeText(salesData.getReceiptNo(), Layout.Alignment.ALIGN_CENTER, textPaint);
-
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
         //mPrintUnicodeText("ನಮ್ಮಲ್ಲಿ ಸುಂದರವಾದ ಶಿರಸಿಯ ಗಣಪತಿ ಮೂರ್ತಿಗಳು ಸಿಗುತ್ತವೆ", 22, CENTER);
         mPrintUnicodeText(readSharedPref("text1"), 22, CENTER);
@@ -733,7 +730,43 @@ public class Deliver extends AppCompatActivity {
         //mPrintUnicodeText("9448629160/9916278538/9141646176", 20, CENTER);
         mPrintUnicodeText(readSharedPref("text4"), 20, CENTER);
         mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.resetPrinter();
+    }
 
+    private void printSecondReceipt() {
+        mPrinter.setPrinterWidth(PrinterWidth.PRINT_WIDTH_48MM);
+        mPrinter.setAlignmentCenter();
+        int textSize = 25;
+        SellModel salesData = salesArray.get(transactionID);
+        //Print receipt number
+        Typeface custom_font = Typeface.createFromAsset(getAssets(), "fonts/ErasBoldITC.ttf");
+        TextPaint textPaint = new TextPaint();
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(125);
+        textPaint.setTypeface(custom_font);
+        mPrinter.printUnicodeText(salesData.getReceiptNo(), Layout.Alignment.ALIGN_CENTER, textPaint);
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+        mPrintUnicodeText(UHelper.dateFormatymdhmsTOddmyyyy(salesData.getDate()), textSize, RIGHT);
+        mPrintUnicodeText("Name  :" + salesData.getName(), 32, LEFT);
+        mPrintUnicodeText("Mob   :" + salesData.getMobile(), textSize, LEFT);
+        if (!tempModelName.contains("Model"))
+            mPrintUnicodeText("Model : " + tempModelName, 32, LEFT);
+        mPrintUnicodeText("City  :" + salesData.getCity(), textSize, LEFT);
+        mPrintUnicodeText("Price :₹" + tempPrice, textSize, LEFT);
+        mPrintUnicodeText("Advnc :₹" + tempAdvance, textSize, LEFT);
+        mPrintUnicodeText("Bal :₹" + tempBalance, 34, LEFT);
+        mPrintUnicodeText("Text  :" + salesData.getComments(), textSize, LEFT);
+        mPrintUnicodeText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", 22, CENTER);
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
+        mPrinter.printLineFeed();
         mPrinter.printLineFeed();
         mPrinter.printLineFeed();
         mPrinter.printLineFeed();

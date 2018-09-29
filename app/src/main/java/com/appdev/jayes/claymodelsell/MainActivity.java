@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
         DatabaseReference refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
-        refYear.keepSynced(true);
+        //refYear.keepSynced(true);
 
         TextView username = (TextView) findViewById(R.id.username);
 

@@ -8,6 +8,7 @@
     android:theme="@android:style/Theme.NoTitleBar">
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -68,6 +69,17 @@
         android:layout_marginEnd="8dp"
         android:layout_marginTop="8dp"
         android:text="TextView"
+        android:textColor="@color/common_google_signin_btn_text_light_pressed"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Ver : 1.1"
+        android:textColor="@color/common_google_signin_btn_text_light_pressed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/username" />
 </android.support.constraint.ConstraintLayout>
