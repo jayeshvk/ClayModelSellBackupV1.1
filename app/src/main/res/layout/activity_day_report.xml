@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".DayReport">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/fromDate"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:hint="From Date"
+            android:inputType="date"
+            android:layout_width="0dp" />
+
+        <TextView
+            android:id="@+id/toDate"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:layout_width="0dp"
+            android:hint="To Date"
+            android:inputType="date" />
+
+        <Button
+            android:id="@+id/find"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.75"
+            android:onClick="buttonFind"
+            android:layout_width="0dp"
+            android:text="Find" />
+
+        <Button
+            android:id="@+id/print"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.75"
+            android:onClick="buttonPrint"
+            android:text="Prnt" />
+
+    </LinearLayout>
+
+    <!-- <ListView
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:id="@+id/lv"/>-->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <de.codecrafters.tableview.SortableTableView xmlns:table="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/tableView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@color/colorPrimaryDark"
+                android:dividerHeight="1dip"
+                table:tableView_columnCount="4" />
+
+        </LinearLayout>
+
+
+
+</LinearLayout>

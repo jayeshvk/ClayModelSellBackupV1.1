@@ -3,6 +3,9 @@
     package="com.appdev.jayes.claymodelsell">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -10,20 +13,38 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Login">
+        <activity
+            android:name=".Login"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" />
-        <activity android:name=".LocationsActivity" />
-        <activity android:name=".ClayModelsActivity" />
-        <activity android:name=".SellActivity" />
-        <activity android:name=".Deliver" />
-        <activity android:name=".Main2Activity" />
-        <activity android:name=".Settings"></activity>
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".LocationsActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ClayModelsActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".SellActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Deliver"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Settings"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".offlineSellActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".DayReport" />
+        <activity android:name=".DailyReport"></activity>
     </application>
 
 </manifest>

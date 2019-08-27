@@ -1,46 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_centerVertical="true"
-    android:layout_gravity="center"
-    android:layout_marginLeft="100sp"
-    android:layout_marginRight="100sp"
     android:orientation="vertical"
     android:theme="@android:style/Theme.NoTitleBar"
     tools:context=".Settings">
-
-    <TextView
-        android:id="@+id/lbl"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="Attach Printer" />
-
-    <TextView
-        android:id="@+id/lblPrinterName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="Printer Name" />
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="btnConnect"
-        android:text="Connect Printer" />
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="btnDisconnect"
-        android:text="Disconnect Printer" />
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="btnPrint"
-        android:text="Print sample" />
 
     <Button
         android:layout_width="match_parent"
@@ -53,5 +20,30 @@
         android:layout_height="wrap_content"
         android:onClick="buttonClayModels"
         android:text="Clay Models" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="printEmptyReceipt"
+        android:text="Print empty receipt" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="buttonHeaderFooter"
+        android:text="Header Footer Text" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="buttonReport"
+        android:text="Report" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="buttonBatteryStat"
+        android:text="Battery Status" />
 
 </LinearLayout>

@@ -1,5 +1,6 @@
 package com.appdev.jayes.claymodelsell;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,10 +10,18 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,9 +31,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainactivity);
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-        DatabaseReference root = FirebaseDatabase.getInstance().getReference("users");
-        root.keepSynced(true);
+
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+        DatabaseReference refYear = FirebaseDatabase.getInstance().getReference("users/" + user.getUid() + "/sales/2018/receiptno");
+        //refYear.keepSynced(true);
+
+        TextView username = (TextView) findViewById(R.id.username);
+
+        if (user != null)
+            username.setText(user.getEmail());
 
     }
 
@@ -61,12 +77,13 @@ public class MainActivity extends AppCompatActivity {
         Log.d("CDA", "onBackPressed Called");
         moveTaskToBack(true);
         android.os.Process.killProcess(android.os.Process.myPid());
-        System.exit(1);
+        System.exit(0);
     }
 
     public void buttonSell(View view) {
         startActivity(new Intent(MainActivity.this, SellActivity.class));
     }
+
 
     public void buttonDeliver(View view) {
         startActivity(new Intent(MainActivity.this, Deliver.class));

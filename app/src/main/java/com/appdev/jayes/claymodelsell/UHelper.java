@@ -238,7 +238,13 @@ public class UHelper {
     }
 
     //for use with Emoji 24/06/2018 jayesh
-    public String getEmojiByUnicode(int unicode){
+    public String getEmojiByUnicode(int unicode) {
         return new String(Character.toChars(unicode));
+    }
+
+    //for adding leading x number of zeros
+    public static String intLeadingZero(int numberofZero, int number) {
+        String digits = "%0" + numberofZero + "d";
+        return String.format(digits, number);
     }
 }

@@ -31,6 +31,26 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Date"
+            android:textSize="19sp" />
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="19sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="horizontal" />
 
     <EditText
@@ -66,11 +86,16 @@
         android:inputType="textPersonName" />
 
 
-    <Spinner
-        android:id="@+id/modelNameSpinner"
+    <!--    <Spinner
+            android:id="@+id/modelNameSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dialog" />-->
+    <AutoCompleteTextView
+        android:id="@+id/mnameList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:spinnerMode="dialog" />
+        android:hint="Model Name" />
 
     <Spinner
         android:id="@+id/locationSpinner"
